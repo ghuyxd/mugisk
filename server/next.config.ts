@@ -4,14 +4,17 @@ const nextConfig: NextConfig = {
   // Enable standalone output for Docker deployment (Phase N)
   output: "standalone",
 
-  // Experimental features
-  experimental: {
-    // Typed routes — catches bad href values at compile time
-    typedRoutes: true,
-  },
+  // Typed routes — catches bad href values at compile time (promoted out of experimental in Next.js 16)
+  typedRoutes: true,
 
-  // Server external packages (don't bundle on the server)
-  serverExternalPackages: ["@prisma/client", "prisma"],
+  // Server external packages — must NOT be bundled; they use native FS APIs
+  serverExternalPackages: [
+    "@prisma/client",
+    "prisma",
+    "chokidar",
+    "music-metadata",
+    "sharp",
+  ],
 };
 
 export default nextConfig;

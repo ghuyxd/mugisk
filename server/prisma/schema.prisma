@@ -179,9 +179,12 @@ model ScanLog {
   id        String     @id @default(cuid())
   type      ScanType
   status    ScanStatus
+  /// The file that triggered this log entry (null for batch/summary entries).
+  filePath  String?
   message   String?
   createdAt DateTime   @default(now())
 
   @@index([createdAt])
+  @@index([filePath])
   @@map("scan_logs")
 }
