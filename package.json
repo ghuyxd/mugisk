@@ -1,0 +1,55 @@
+{
+  "name": "mugisk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted music streaming platform",
+  "scripts": {
+    "dev:server": "pnpm --filter @mugisk/server dev",
+    "dev:desktop": "pnpm --filter @mugisk/desktop dev",
+    "dev": "concurrently \"pnpm dev:server\" \"pnpm dev:desktop\"",
+    "build:server": "pnpm --filter @mugisk/server build",
+    "build:desktop": "pnpm --filter @mugisk/desktop build",
+    "build": "pnpm --filter @mugisk/shared-types build && pnpm build:server && pnpm build:desktop",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "typecheck": "pnpm --filter @mugisk/shared-types typecheck && pnpm --filter @mugisk/server typecheck && pnpm --filter @mugisk/desktop typecheck",
+    "db:generate": "pnpm --filter @mugisk/server db:generate",
+    "db:migrate": "pnpm --filter @mugisk/server db:migrate",
+    "db:push": "pnpm --filter @mugisk/server db:push",
+    "db:studio": "pnpm --filter @mugisk/server db:studio"
+  },
+  "workspaces": [
+    "server",
+    "desktop",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "concurrently": "^9.1.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.18",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-react": "^7.37.3",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "allowedBuildScripts": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "electron",
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
+}

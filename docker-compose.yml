@@ -1,0 +1,75 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Mugisk Docker Compose
+# Phase 1 — postgres + server stub
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: mugisk_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mugisk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mugisk_dev}
+      POSTGRES_DB: mugisk
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mugisk -d mugisk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - mugisk_net
+
+  # ── Mugisk Server (Next.js) ────────────────────────────────────────────────
+  # NOTE: The Dockerfile will be implemented in a future phase.
+  # For now, run the server with `pnpm dev:server` from the repo root.
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile          # to be created in a future phase
+    container_name: mugisk_server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://mugisk:${POSTGRES_PASSWORD:-mugisk_dev}@postgres:5432/mugisk
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      MUSIC_LIBRARY_PATH: ${MUSIC_LIBRARY_PATH:-/music}
+      AI_API_KEY: ${AI_API_KEY:-}
+    volumes:
+      - ${MUSIC_LIBRARY_PATH:-./music}:/music:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - mugisk_net
+    profiles:
+      # Only start the server container when explicitly requested via:
+      #   docker compose --profile server up
+      # During development, use `pnpm dev:server` instead.
+      - server
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Volumes
+# ─────────────────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    name: mugisk_postgres_data
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Networks
+# ─────────────────────────────────────────────────────────────────────────────
+networks:
+  mugisk_net:
+    name: mugisk_network
+    driver: bridge

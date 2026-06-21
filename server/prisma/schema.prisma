@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  USER
+  GUEST
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Models — Phase 1: Auth skeleton
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations — to be added in future phases:
+  // playlists    Playlist[]
+  // playHistory  PlayHistory[]
+  // refreshTokens RefreshToken[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Future phases will add:
+//   - Track, Album, Artist, Genre, Playlist, PlaylistTrack
+//   - RefreshToken (for JWT refresh token rotation)
+//   - LibraryScan  (scan job tracking)
+//   - CoverArt     (cached artwork)
+// ─────────────────────────────────────────────────────────────────────────────
