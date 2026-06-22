@@ -19,6 +19,7 @@ import {
   type VerifiedAccessToken,
 } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 export class AuthError extends Error {
   constructor(
@@ -36,7 +37,12 @@ export class AuthError extends Error {
 
 /**
  * Extract and verify the Bearer access token from the Authorization header.
- * Throws `AuthError(401)` on any failure.
+ * Also performs a DB lookup to ensure the user's account is not disabled —
+ * this means disabling a user takes effect immediately on their next request,
+ * regardless of their token's remaining TTL.
+ *
+ * Throws `AuthError(401)` if token is missing/invalid.
+ * Throws `AuthError(403)` if the user account is disabled.
  */
 export async function requireAuth(
   req: NextRequest,
@@ -48,11 +54,29 @@ export async function requireAuth(
 
   const token = authHeader.slice(7);
 
+  let claims: VerifiedAccessToken;
   try {
-    return await verifyAccessToken(token);
+    claims = await verifyAccessToken(token);
   } catch {
     throw new AuthError(401, "Invalid or expired access token");
   }
+
+  // DB check: reject immediately if account has been disabled since this
+  // token was issued. We use a lightweight select to minimise query cost.
+  const user = await prisma.user.findUnique({
+    where: { id: claims.userId },
+    select: { isDisabled: true },
+  });
+
+  if (!user) {
+    throw new AuthError(401, "User not found");
+  }
+
+  if (user.isDisabled) {
+    throw new AuthError(403, "Account disabled");
+  }
+
+  return claims;
 }
 
 /**
@@ -112,21 +136,28 @@ export async function requireAdmin(
  * Utility: wrap a route handler so AuthError instances are automatically
  * converted to the correct HTTP response instead of propagating as unhandled.
  *
- * Example:
- *   export const GET = withAuth(async (req, claims) => {
- *     return NextResponse.json({ userId: claims.userId });
+ * Supports an optional `context` third argument for dynamic-route segments
+ * (e.g. `{ params: Promise<{ id: string }> }`).
+ *
+ * Example (static route):
+ *   export const GET = withAuth(async (req, claims) => { ... });
+ *
+ * Example (dynamic route):
+ *   export const PATCH = withAuth(async (req, claims, ctx) => {
+ *     const { id } = await (ctx as { params: Promise<{ id: string }> }).params;
  *   });
  */
-export function withAuth(
+export function withAuth<Ctx = unknown>(
   handler: (
     req: NextRequest,
     claims: VerifiedAccessToken,
+    ctx: Ctx,
   ) => Promise<NextResponse>,
 ) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (req: NextRequest, ctx: Ctx): Promise<NextResponse> => {
     try {
       const claims = await requireAuth(req);
-      return await handler(req, claims);
+      return await handler(req, claims, ctx);
     } catch (err) {
       if (err instanceof AuthError) return err.toResponse();
       throw err;
@@ -134,16 +165,17 @@ export function withAuth(
   };
 }
 
-export function withAdmin(
+export function withAdmin<Ctx = unknown>(
   handler: (
     req: NextRequest,
     claims: VerifiedAccessToken,
+    ctx: Ctx,
   ) => Promise<NextResponse>,
 ) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (req: NextRequest, ctx: Ctx): Promise<NextResponse> => {
     try {
       const claims = await requireAdmin(req);
-      return await handler(req, claims);
+      return await handler(req, claims, ctx);
     } catch (err) {
       if (err instanceof AuthError) return err.toResponse();
       throw err;
