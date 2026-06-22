@@ -4,6 +4,7 @@
  * Core authentication utilities:
  *  - Access token  : short-lived JWT (15 min) signed with JWT_SECRET
  *  - Refresh token : opaque 32-byte random hex string; stored HASHED in the DB
+ *  - Stream token  : very short-lived JWT (5 min) for audio streaming via ?token=
  *  - hashToken     : SHA-256 hash used when storing/comparing refresh tokens
  */
 
@@ -59,6 +60,34 @@ export async function verifyAccessToken(
   }
 
   return { userId: payload.sub, role: payload.role };
+}
+
+// ── Stream token ─────────────────────────────────────────────────────────────
+//
+// Used for audio streaming via ?token= query parameter, since <audio> tags
+// cannot set custom HTTP headers. Minted by POST /api/stream/token in exchange
+// for a valid access token. Short TTL (5 min) limits exposure of leaked URLs.
+
+const STREAM_TOKEN_TTL = "5m";
+
+export async function signStreamToken(
+  payload: AccessTokenPayload,
+): Promise<string> {
+  return new SignJWT({ role: payload.role })
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(payload.sub)
+    .setIssuedAt()
+    .setExpirationTime(STREAM_TOKEN_TTL)
+    .sign(getSecret("JWT_SECRET"));
+}
+
+/** Verify a stream token — same format as access token, just shorter TTL. */
+export async function verifyStreamToken(
+  token: string,
+): Promise<VerifiedAccessToken> {
+  // Stream tokens are signed with the same secret and carry the same claims.
+  // The only difference is the shorter TTL enforced at mint time.
+  return verifyAccessToken(token);
 }
 
 // ── Refresh token ─────────────────────────────────────────────────────────────

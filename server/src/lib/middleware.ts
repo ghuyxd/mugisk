@@ -13,7 +13,11 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { verifyAccessToken, type VerifiedAccessToken } from "@/lib/auth";
+import {
+  verifyAccessToken,
+  verifyStreamToken,
+  type VerifiedAccessToken,
+} from "@/lib/auth";
 import { UserRole } from "@prisma/client";
 
 export class AuthError extends Error {
@@ -49,6 +53,43 @@ export async function requireAuth(
   } catch {
     throw new AuthError(401, "Invalid or expired access token");
   }
+}
+
+/**
+ * Like `requireAuth`, but also accepts a short-lived stream token passed as the
+ * `?token=` query parameter. Intended exclusively for the stream endpoint,
+ * where native <audio> elements cannot set custom HTTP headers.
+ *
+ * Resolution order:
+ *   1. Authorization: Bearer <accessToken>  (standard clients)
+ *   2. ?token=<streamToken>                 (browser <audio> elements)
+ *
+ * Throws `AuthError(401)` if neither is present or both are invalid.
+ */
+export async function requireAuthOrToken(
+  req: NextRequest,
+): Promise<VerifiedAccessToken> {
+  const authHeader = req.headers.get("authorization");
+
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    try {
+      return await verifyAccessToken(token);
+    } catch {
+      throw new AuthError(401, "Invalid or expired access token");
+    }
+  }
+
+  const queryToken = req.nextUrl.searchParams.get("token");
+  if (queryToken) {
+    try {
+      return await verifyStreamToken(queryToken);
+    } catch {
+      throw new AuthError(401, "Invalid or expired stream token");
+    }
+  }
+
+  throw new AuthError(401, "Missing Authorization header or stream token");
 }
 
 /**
