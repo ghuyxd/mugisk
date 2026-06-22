@@ -20,6 +20,9 @@ import {
   REFRESH_TOKEN_TTL_MS,
 } from "@/lib/auth";
 import { getClientIp } from "@/lib/middleware";
+import { corsHeaders, handleOptions } from "@/lib/cors";
+
+export { handleOptions as OPTIONS };
 
 const refreshSchema = z.object({
   refreshToken: z.string().min(1, "refreshToken is required"),
@@ -30,14 +33,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400, headers: corsHeaders() });
   }
 
   const parsed = refreshSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
-      { status: 400 },
+      { status: 400, headers: corsHeaders() },
     );
   }
 
@@ -53,7 +56,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!session) {
     return NextResponse.json(
       { error: "Invalid refresh token" },
-      { status: 401 },
+      { status: 401, headers: corsHeaders() },
     );
   }
 
@@ -69,21 +72,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     });
     return NextResponse.json(
       { error: "Refresh token has already been used. All sessions revoked." },
-      { status: 401 },
+      { status: 401, headers: corsHeaders() },
     );
   }
 
   if (session.expiresAt < now) {
     return NextResponse.json(
       { error: "Refresh token has expired" },
-      { status: 401 },
+      { status: 401, headers: corsHeaders() },
     );
   }
 
   if (session.user.isDisabled) {
     return NextResponse.json(
       { error: "This account has been disabled" },
-      { status: 403 },
+      { status: 403, headers: corsHeaders() },
     );
   }
 
@@ -118,6 +121,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   return NextResponse.json(
     { accessToken, refreshToken: newRefreshToken },
-    { status: 200 },
+    { status: 200, headers: corsHeaders() },
   );
 }

@@ -1,5 +1,16 @@
 import type { NextConfig } from "next";
 
+// CORS headers applied to every /api/* response.
+// The desktop Electron client has no fixed origin (file:// in prod,
+// http://localhost:5173 in dev), so we allow all origins.
+// Auth is token-based — no session cookies — so wildcard origin is safe.
+const CORS_HEADERS = [
+  { key: "Access-Control-Allow-Origin", value: "*" },
+  { key: "Access-Control-Allow-Methods", value: "GET, POST, PUT, PATCH, DELETE, OPTIONS" },
+  { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" },
+  { key: "Access-Control-Max-Age", value: "86400" },
+];
+
 const nextConfig: NextConfig = {
   // Enable standalone output for Docker deployment (Phase N)
   output: "standalone",
@@ -15,6 +26,16 @@ const nextConfig: NextConfig = {
     "music-metadata",
     "sharp",
   ],
+
+  // Inject CORS headers on all API routes
+  async headers() {
+    return [
+      {
+        source: "/api/:path*",
+        headers: CORS_HEADERS,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

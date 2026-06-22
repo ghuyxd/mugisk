@@ -19,6 +19,10 @@ import {
 } from "@/lib/auth";
 import { authRateLimiter } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/middleware";
+import { corsHeaders, handleOptions } from "@/lib/cors";
+
+// Respond to CORS preflight requests from the Electron desktop client
+export { handleOptions as OPTIONS };
 
 const loginSchema = z.object({
   /** Can be either an email address or a username. */
@@ -32,7 +36,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!authRateLimiter.check(`login:${ip}`)) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
-      { status: 429 },
+      { status: 429, headers: corsHeaders() },
     );
   }
 
@@ -41,14 +45,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400, headers: corsHeaders() });
   }
 
   const parsed = loginSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
-      { status: 400 },
+      { status: 400, headers: corsHeaders() },
     );
   }
 
@@ -71,14 +75,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!user || !passwordMatch) {
     return NextResponse.json(
       { error: "Invalid credentials" },
-      { status: 401 },
+      { status: 401, headers: corsHeaders() },
     );
   }
 
   if (user.isDisabled) {
     return NextResponse.json(
       { error: "This account has been disabled" },
-      { status: 403 },
+      { status: 403, headers: corsHeaders() },
     );
   }
 
@@ -104,6 +108,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       refreshToken,
       user: { id: user.id, username: user.username, role: user.role },
     },
-    { status: 200 },
+    { status: 200, headers: corsHeaders() },
   );
 }

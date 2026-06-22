@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@mugisk/shared-types": "workspace:*",
+    "electron-store": "^8.2.0",
     "electron-updater": "^6.3.9"
   },
   "devDependencies": {
@@ -24,6 +25,7 @@
     "@types/node": "^22.10.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "electron": "^34.0.1",
@@ -46,17 +48,25 @@
       "out"
     ],
     "linux": {
-      "target": ["deb", "AppImage"]
+      "target": [
+        "deb",
+        "AppImage"
+      ]
     },
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "entitlementsInherit": "resources/entitlements.mac.plist",
       "extendInfo": {
         "NSMicrophoneUsageDescription": "Not required"
       }
     },
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "resources/icon.ico"
     }
   }

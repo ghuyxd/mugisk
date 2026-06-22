@@ -1,7 +1,9 @@
 import { resolve } from "path";
 
 import react from "@vitejs/plugin-react";
+import autoprefixer from "autoprefixer";
 import { defineConfig, externalizeDepsPlugin } from "electron-vite";
+import tailwindcss from "tailwindcss";
 
 export default defineConfig({
   main: {
@@ -26,7 +28,7 @@ export default defineConfig({
     plugins: [react()],
     css: {
       postcss: {
-        plugins: [],
+        plugins: [tailwindcss(), autoprefixer()],
       },
     },
   },
