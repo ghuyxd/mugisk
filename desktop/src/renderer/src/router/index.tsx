@@ -10,6 +10,10 @@ import PlaylistsPage from "@renderer/pages/PlaylistsPage";
 import SearchPage from "@renderer/pages/SearchPage";
 import SettingsPage from "@renderer/pages/SettingsPage";
 
+import AlbumDetailPage from "@renderer/pages/AlbumDetailPage";
+import ArtistDetailPage from "@renderer/pages/ArtistDetailPage";
+import PlaylistDetailPage from "@renderer/pages/PlaylistDetailPage";
+
 // ── Loading screen while auth state initialises ──────────────────────────────
 
 function InitLoader(): React.JSX.Element {
@@ -62,6 +66,10 @@ const router = createHashRouter([
           { path: "playlists", element: <PlaylistsPage /> },
           { path: "search", element: <SearchPage /> },
           { path: "settings", element: <SettingsPage /> },
+          
+          { path: "albums/:id", element: <AlbumDetailPage /> },
+          { path: "artists/:id", element: <ArtistDetailPage /> },
+          { path: "playlists/:id", element: <PlaylistDetailPage /> },
         ],
       },
     ],
