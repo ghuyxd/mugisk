@@ -18,6 +18,12 @@ let failedQueue: Array<{
   reject: (reason: unknown) => void;
 }> = [];
 
+export function getServerUrlSync(): string {
+  const stored = window.api?.store?.getSync?.("serverUrl") as string;
+  const url = stored || import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
+  return url.replace(/\/$/, "");
+}
+
 function processQueue(error: unknown, token: string | null): void {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
@@ -31,6 +37,7 @@ function processQueue(error: unknown, token: string | null): void {
 
 // Create a bare instance — baseURL is set per-request via interceptor
 export const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_SERVER_URL || "http://localhost:3000",
   timeout: 15_000,
   headers: { "Content-Type": "application/json" },
 });
@@ -40,8 +47,9 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   // Grab serverUrl from electron-store
   const serverUrl = (await window.api.store.get("serverUrl")) as string;
-  if (serverUrl && !config.baseURL) {
-    config.baseURL = serverUrl.replace(/\/$/, "");
+  const finalUrl = serverUrl || import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
+  if (!config.baseURL || serverUrl) {
+    config.baseURL = finalUrl.replace(/\/$/, "");
   }
 
   // Attach access token
@@ -89,7 +97,8 @@ apiClient.interceptors.response.use(
       }
 
       const serverUrl = (await window.api.store.get("serverUrl")) as string;
-      const baseUrl = serverUrl.replace(/\/$/, "");
+      const finalUrl = serverUrl || import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
+      const baseUrl = finalUrl.replace(/\/$/, "");
 
       const { data } = await axios.post<{
         accessToken: string;

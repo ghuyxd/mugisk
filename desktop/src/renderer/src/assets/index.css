@@ -902,3 +902,31 @@ input, textarea {
 .toggle input:checked + .toggle-slider::before {
   transform: translateX(18px);
 }
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.search-result-item:hover {
+  background-color: var(--bg);
+}
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+  font-size: 13px;
+}
+.context-menu-item:hover {
+  background-color: var(--bg);
+}
+

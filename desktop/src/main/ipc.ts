@@ -41,22 +41,32 @@ function readTokens(): TokenData | null {
   const path = tokenFilePath();
   if (!existsSync(path)) return null;
   try {
-    if (!safeStorage.isEncryptionAvailable()) return null;
-    const encrypted = readFileSync(path);
-    const decrypted = safeStorage.decryptString(encrypted);
-    return JSON.parse(decrypted) as TokenData;
+    const data = readFileSync(path);
+    if (safeStorage.isEncryptionAvailable()) {
+      try {
+        const decrypted = safeStorage.decryptString(data);
+        return JSON.parse(decrypted) as TokenData;
+      } catch {
+        // Fallback if the file was written without encryption
+        return JSON.parse(data.toString("utf8")) as TokenData;
+      }
+    } else {
+      return JSON.parse(data.toString("utf8")) as TokenData;
+    }
   } catch {
     return null;
   }
 }
 
 function writeTokens(data: TokenData): void {
-  if (!safeStorage.isEncryptionAvailable()) {
-    console.warn("[IPC] safeStorage not available, tokens not persisted.");
-    return;
+  const path = tokenFilePath();
+  if (safeStorage.isEncryptionAvailable()) {
+    const encrypted = safeStorage.encryptString(JSON.stringify(data));
+    writeFileSync(path, encrypted);
+  } else {
+    console.warn("[IPC] safeStorage not available, storing tokens unencrypted.");
+    writeFileSync(path, Buffer.from(JSON.stringify(data), "utf8"));
   }
-  const encrypted = safeStorage.encryptString(JSON.stringify(data));
-  writeFileSync(tokenFilePath(), encrypted);
 }
 
 function clearTokens(): void {
@@ -97,6 +107,11 @@ export function registerIpcHandlers(): void {
   // Store: get
   ipcMain.handle("store:get", (_event, key: keyof StoreSchema) => {
     return store.get(key);
+  });
+
+  // Store: get-sync
+  ipcMain.on("store:get-sync", (event, key: keyof StoreSchema) => {
+    event.returnValue = store.get(key);
   });
 
   // Store: set

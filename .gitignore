@@ -40,3 +40,4 @@ prisma/generated/
 
 # Electron build
 release/
+music/

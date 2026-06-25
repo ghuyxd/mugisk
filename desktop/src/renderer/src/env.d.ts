@@ -14,6 +14,7 @@ declare global {
       };
       store: {
         get: (key: string) => Promise<unknown>;
+        getSync: (key: string) => unknown;
         set: (key: string, value: unknown) => Promise<boolean>;
       };
       window: {

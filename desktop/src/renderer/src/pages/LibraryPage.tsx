@@ -1,39 +1,25 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { Disc3, Mic2, Music2, Tag } from "lucide-react";
 
-const TAB_META: Record<string, { icon: React.ReactNode; label: string; hint: string }> = {
-  albums: {
-    icon: <Disc3 size={48} />,
-    label: "Albums",
-    hint: "Your album collection — Phase 7",
-  },
-  artists: {
-    icon: <Mic2 size={48} />,
-    label: "Artists",
-    hint: "Browse by artist — Phase 7",
-  },
-  songs: {
-    icon: <Music2 size={48} />,
-    label: "Songs",
-    hint: "All tracks — Phase 7",
-  },
-  genres: {
-    icon: <Tag size={48} />,
-    label: "Genres",
-    hint: "Browse by genre — Phase 7",
-  },
-};
+import AlbumsView from "./library/AlbumsView";
+import ArtistsView from "./library/ArtistsView";
+import SongsView from "./library/SongsView";
+import GenresView from "./library/GenresView";
 
 export default function LibraryPage(): React.JSX.Element {
   const { tab } = useParams<{ tab?: string }>();
-  const meta = TAB_META[tab ?? "albums"] ?? TAB_META["albums"];
+  const activeTab = tab ?? "albums";
 
   return (
-    <div className="placeholder-page">
-      <span className="placeholder-icon">{meta.icon}</span>
-      <span className="placeholder-label">{meta.label}</span>
-      <span className="placeholder-hint">{meta.hint}</span>
+    <div style={{ height: "100%", overflowY: "auto" }}>
+      <div style={{ padding: "24px", fontSize: 24, fontWeight: "bold", textTransform: "capitalize" }}>
+        {activeTab}
+      </div>
+      
+      {activeTab === "albums" && <AlbumsView />}
+      {activeTab === "artists" && <ArtistsView />}
+      {activeTab === "songs" && <SongsView />}
+      {activeTab === "genres" && <GenresView />}
     </div>
   );
 }

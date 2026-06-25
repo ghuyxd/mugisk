@@ -10,3 +10,5 @@ allowBuilds:
   prisma: true
   sharp: true
   unrs-resolver: true
+minimumReleaseAgeExclude:
+  - autoprefixer@10.5.2

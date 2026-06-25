@@ -9,6 +9,9 @@ import LibraryPage from "@renderer/pages/LibraryPage";
 import PlaylistsPage from "@renderer/pages/PlaylistsPage";
 import SearchPage from "@renderer/pages/SearchPage";
 import SettingsPage from "@renderer/pages/SettingsPage";
+import AlbumDetailPage from "@renderer/pages/AlbumDetailPage";
+import ArtistDetailPage from "@renderer/pages/ArtistDetailPage";
+import PlaylistDetailPage from "@renderer/pages/PlaylistDetailPage";
 
 // ── Loading screen while auth state initialises ──────────────────────────────
 
@@ -59,7 +62,10 @@ const router = createHashRouter([
           { index: true, element: <HomePage /> },
           { path: "library", element: <LibraryPage /> },
           { path: "library/:tab", element: <LibraryPage /> },
+          { path: "albums/:id", element: <AlbumDetailPage /> },
+          { path: "artists/:id", element: <ArtistDetailPage /> },
           { path: "playlists", element: <PlaylistsPage /> },
+          { path: "playlists/:id", element: <PlaylistDetailPage /> },
           { path: "search", element: <SearchPage /> },
           { path: "settings", element: <SettingsPage /> },
         ],

@@ -22,6 +22,8 @@ if (process.contextIsolated) {
       store: {
         get: (key: string): Promise<unknown> =>
           ipcRenderer.invoke("store:get", key),
+        getSync: (key: string): unknown => 
+          ipcRenderer.sendSync("store:get-sync", key),
         set: (key: string, value: unknown): Promise<boolean> =>
           ipcRenderer.invoke("store:set", key, value),
       },

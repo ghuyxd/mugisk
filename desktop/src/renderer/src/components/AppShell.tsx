@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import NowPlayingBar from "./NowPlayingBar";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import TrackContextMenu from "./TrackContextMenu";
 
 export default function AppShell(): React.JSX.Element {
   return (
@@ -27,6 +28,9 @@ export default function AppShell(): React.JSX.Element {
 
       {/* Persistent now-playing footer */}
       <NowPlayingBar />
+
+      {/* Global context menu */}
+      <TrackContextMenu />
     </div>
   );
 }
