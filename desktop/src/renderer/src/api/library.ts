@@ -41,6 +41,7 @@ function mapAlbum(a: any): Album {
     artist: a.artist?.name || "Unknown Artist",
     trackCount: a._count?.tracks ?? a.trackCount ?? 0,
     duration: a.duration || 0,
+    coverArtId: a.coverUrl || a.coverArtId || undefined
   };
 }
 
@@ -69,12 +70,12 @@ export async function getArtists(page = 1, limit = 50, search?: string): Promise
   const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
   if (search) params.set("search", search);
   const { data } = await apiClient.get<BackendPaginated<any>>("/api/artists", { params });
-  return mapPaginatedResponse(data, (a) => a); // Artist might not need mapping yet
+  return mapPaginatedResponse(data, (a) => ({ ...a, coverArtId: a.imageUrl || a.coverArtId || undefined })); 
 }
 
 export async function getArtist(id: string): Promise<Artist> {
   const { data } = await apiClient.get<any>(`/api/artists/${id}`);
-  return data;
+  return { ...data, coverArtId: data.imageUrl || data.coverArtId || undefined };
 }
 
 export async function getArtistAlbums(id: string): Promise<Album[]> {
