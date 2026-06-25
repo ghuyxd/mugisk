@@ -60,7 +60,7 @@ export async function getAlbum(id: string): Promise<Album> {
 
 export async function getAlbumTracks(id: string): Promise<Track[]> {
   const { data } = await apiClient.get<any>(`/api/albums/${id}`);
-  return data.tracks.map(mapTrack);
+  return data.tracks.map((t: any) => mapTrack({ ...t, album: { title: data.title, coverUrl: data.coverUrl } }));
 }
 
 // ── Artists ──────────────────────────────────────────────────────────────────
