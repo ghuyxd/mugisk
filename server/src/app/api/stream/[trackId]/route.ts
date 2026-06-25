@@ -25,6 +25,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { Readable } from "stream";
 import { prisma } from "@/lib/prisma";
 import { requireAuthOrToken, AuthError } from "@/lib/middleware";
 
@@ -45,6 +46,35 @@ function getMimeType(format: string): string {
   return FORMAT_MIME[format.toUpperCase()] ?? "application/octet-stream";
 }
 
+// ── Stream Helper ────────────────────────────────────────────────────────────
+function nodeStreamToWebStream(nodeStream: fs.ReadStream): ReadableStream {
+  let isCancelled = false;
+  const iterator = nodeStream[Symbol.asyncIterator]();
+
+  return new ReadableStream({
+    async pull(controller) {
+      if (isCancelled) return;
+      try {
+        const { value, done } = await iterator.next();
+        if (isCancelled) return;
+        if (done) {
+          controller.close();
+        } else {
+          // Node Buffers can be passed directly to Uint8Array safely
+          controller.enqueue(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
+        }
+      } catch (error) {
+        if (isCancelled) return;
+        try { controller.error(error); } catch (_) { }
+      }
+    },
+    cancel() {
+      isCancelled = true;
+      nodeStream.destroy();
+    }
+  });
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Route handler
 // ─────────────────────────────────────────────────────────────────────────────
@@ -53,7 +83,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ trackId: string }> },
 ): Promise<NextResponse> {
-  // Auth: Bearer header OR ?token= query param
+
   try {
     await requireAuthOrToken(req);
   } catch (err) {
@@ -63,39 +93,32 @@ export async function GET(
 
   const { trackId } = await params;
 
-  // Look up track in DB to get file path
   const track = await prisma.track.findUnique({
     where: { id: trackId },
-    select: { filePath: true, format: true, durationSeconds: true },
+    select: { filePath: true, format: true },
   });
 
-  if (!track) {
-    return NextResponse.json({ error: "Track not found" }, { status: 404 });
-  }
+  if (!track) return NextResponse.json({ error: "Track not found" }, { status: 404 });
 
   const absFilePath = path.resolve(track.filePath);
 
-  // Check file exists on disk
   let fileSize: number;
   try {
     const stat = await fs.promises.stat(absFilePath);
     fileSize = stat.size;
   } catch {
-    return NextResponse.json(
-      { error: "Audio file not found on disk. Rescan the library." },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: "Audio file not found on disk." }, { status: 503 });
   }
 
   const mimeType = getMimeType(track.format);
   const rangeHeader = req.headers.get("range");
 
-  // ── Full-file response (no Range header) ───────────────────────────────────
+  // ── FULL FILE RESPONSE (200) ───────────────────────────────────
   if (!rangeHeader) {
-    const stream = fs.createReadStream(absFilePath);
-    const body = stream as unknown as ReadableStream;
+    const nodeStream = fs.createReadStream(absFilePath);
+    const webStream = Readable.toWeb(nodeStream);
 
-    return new NextResponse(body, {
+    return new NextResponse(webStream as any, {
       status: 200,
       headers: {
         "Content-Type": mimeType,
@@ -106,15 +129,12 @@ export async function GET(
     });
   }
 
-  // ── Ranged response (206 Partial Content) ──────────────────────────────────
-  // Parse "bytes=start-[end]"
+  // ── RANGED RESPONSE (206) ──────────────────────────────────
   const match = rangeHeader.match(/^bytes=(\d*)-(\d*)$/);
   if (!match) {
     return new NextResponse(null, {
       status: 416,
-      headers: {
-        "Content-Range": `bytes */${fileSize}`,
-      },
+      headers: { "Content-Range": `bytes */${fileSize}` },
     });
   }
 
@@ -124,24 +144,22 @@ export async function GET(
   let start = rawStart !== "" ? parseInt(rawStart, 10) : 0;
   let end = rawEnd !== "" ? parseInt(rawEnd, 10) : fileSize - 1;
 
-  // Clamp end to file boundary
   if (end >= fileSize) end = fileSize - 1;
 
-  // Validate range
   if (start > end || start < 0) {
     return new NextResponse(null, {
       status: 416,
-      headers: {
-        "Content-Range": `bytes */${fileSize}`,
-      },
+      headers: { "Content-Range": `bytes */${fileSize}` },
     });
   }
 
   const chunkSize = end - start + 1;
-  const stream = fs.createReadStream(absFilePath, { start, end });
-  const body = stream as unknown as ReadableStream;
 
-  return new NextResponse(body, {
+  // Đã XÓA bỏ dòng req.signal.abort cũ để tránh lỗi "Controller is already closed"
+  const nodeStream = fs.createReadStream(absFilePath, { start, end });
+  const webStream = Readable.toWeb(nodeStream);
+
+  return new NextResponse(webStream as any, {
     status: 206,
     headers: {
       "Content-Type": mimeType,

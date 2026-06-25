@@ -78,11 +78,25 @@ export function PlayerProvider({ children }: { children: React.ReactNode }): Rea
     audio.addEventListener("play", handlePlay);
     audio.addEventListener("pause", handlePause);
 
+    const logEvent = (e: Event) => {
+      const target = e.target as HTMLAudioElement;
+      console.log(`[AudioEvent] ${e.type}`, {
+        currentTime: target.currentTime,
+        readyState: target.readyState,
+        networkState: target.networkState,
+        error: target.error
+      });
+    };
+    
+    const eventsToLog = ["play", "playing", "pause", "ended", "error", "stalled", "suspend", "abort", "waiting"];
+    eventsToLog.forEach(evt => audio.addEventListener(evt, logEvent));
+
     return () => {
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("ended", handleEnded);
       audio.removeEventListener("play", handlePlay);
       audio.removeEventListener("pause", handlePause);
+      eventsToLog.forEach(evt => audio.removeEventListener(evt, logEvent));
       audio.pause();
       audio.src = "";
     };
