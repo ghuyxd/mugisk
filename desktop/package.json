@@ -62,15 +62,17 @@
     ],
     "linux": {
       "target": [
-        "deb",
         "AppImage"
-      ]
+      ],
+      "icon": "resources/icon.png",
+      "category": "Audio"
     },
     "mac": {
       "target": [
         "dmg",
         "zip"
       ],
+      "icon": "resources/icon.png",
       "entitlementsInherit": "resources/entitlements.mac.plist",
       "extendInfo": {
         "NSMicrophoneUsageDescription": "Not required"
@@ -80,7 +82,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "resources/icon.ico"
+      "icon": "resources/icon.png"
     }
   }
 }

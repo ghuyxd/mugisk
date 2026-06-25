@@ -29,12 +29,10 @@ services:
       - mugisk_net
 
   # ── Mugisk Server (Next.js) ────────────────────────────────────────────────
-  # NOTE: The Dockerfile will be implemented in a future phase.
-  # For now, run the server with `pnpm dev:server` from the repo root.
   server:
     build:
-      context: ./server
-      dockerfile: Dockerfile          # to be created in a future phase
+      context: .
+      dockerfile: server/Dockerfile
     container_name: mugisk_server
     restart: unless-stopped
     depends_on:
@@ -43,24 +41,19 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://mugisk:${POSTGRES_PASSWORD:-mugisk_dev}@postgres:5432/mugisk
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      MUSIC_LIBRARY_PATH: ${MUSIC_LIBRARY_PATH:-/music}
+      JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-key}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-super-secret-refresh-key}
+      MUSIC_LIBRARY_PATH: /music
       AI_API_KEY: ${AI_API_KEY:-}
     volumes:
       # rw so POST /api/admin/library/upload can write new files into the library
       - ${MUSIC_LIBRARY_PATH:-./music}:/music:rw
       # Persistent cover art (avoids re-extraction after restarts)
-      - server_covers:/app/public/covers
+      - server_covers:/app/server/public/covers
     ports:
       - "3000:3000"
     networks:
       - mugisk_net
-    profiles:
-      # Only start the server container when explicitly requested via:
-      #   docker compose --profile server up
-      # During development, use `pnpm dev:server` instead.
-      - server
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Volumes
