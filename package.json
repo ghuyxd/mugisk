@@ -1,5 +1,6 @@
 {
   "name": "mugisk",
+  "type": "module",
   "version": "0.1.0",
   "private": true,
   "description": "Self-hosted music streaming platform",
@@ -10,7 +11,7 @@
     "build:server": "pnpm --filter @mugisk/server build",
     "build:desktop": "pnpm --filter @mugisk/desktop build",
     "build": "pnpm --filter @mugisk/shared-types build && pnpm build:server && pnpm build:desktop",
-    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
     "typecheck": "pnpm --filter @mugisk/shared-types typecheck && pnpm --filter @mugisk/server typecheck && pnpm --filter @mugisk/desktop typecheck",
@@ -25,17 +26,19 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "concurrently": "^9.1.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.39.4",
     "eslint-config-next": "^14.2.18",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-react": "^7.37.3",
-    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "prettier": "^3.4.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.62.0"
   },
   "engines": {
     "node": ">=20.0.0",
@@ -48,6 +51,15 @@
       "prisma",
       "electron",
       "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ],
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "electron",
+      "esbuild",
+      "prisma",
       "sharp",
       "unrs-resolver"
     ]
