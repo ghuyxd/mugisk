@@ -41,3 +41,5 @@ prisma/generated/
 # Electron build
 release/
 music/
+
+server/public/covers/
