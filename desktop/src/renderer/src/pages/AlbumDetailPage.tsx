@@ -4,13 +4,15 @@ import { Disc3, Play } from "lucide-react";
 
 import { getAlbum, type AlbumDetail } from "@renderer/api/library";
 import TrackRow from "@renderer/components/TrackRow";
-import { usePlayer } from "@renderer/context/PlayerContext";
+import AddToPlaylistModal from "@renderer/components/AddToPlaylistModal";
+import { usePlayer, type QueueTrack } from "@renderer/context/PlayerContext";
 
 export default function AlbumDetailPage(): React.JSX.Element {
   const { id } = useParams<{ id: string }>();
   const [album, setAlbum] = useState<AlbumDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const { playAll } = usePlayer();
+  const [addToPlaylistTrack, setAddToPlaylistTrack] = useState<QueueTrack | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -79,7 +81,7 @@ export default function AlbumDetailPage(): React.JSX.Element {
           <span style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, color: "var(--text-muted)" }}>Album</span>
           <h1 style={{ fontSize: 48, fontWeight: 800, margin: "8px 0 16px", lineHeight: 1.1 }}>{album.title}</h1>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--text-muted)" }}>
-            <span style={{ fontWeight: 600, color: "var(--text-main)" }}>{album.artist.name}</span>
+            <span style={{ fontWeight: 600, color: "var(--text)" }}>{album.artist.name}</span>
             {album.year && (
               <>
                 <span>•</span>
@@ -101,7 +103,7 @@ export default function AlbumDetailPage(): React.JSX.Element {
             width: 56,
             height: 56,
             borderRadius: 28,
-            background: "var(--brand)",
+            background: "var(--accent)",
             color: "white",
             border: "none",
             display: "flex",
@@ -120,9 +122,21 @@ export default function AlbumDetailPage(): React.JSX.Element {
       {/* Tracks */}
       <div className="track-list">
         {album.tracks.map((track) => (
-          <TrackRow key={track.id} track={{ ...track, album }} index={track.trackNumber || undefined} />
+          <TrackRow
+            key={track.id}
+            track={{ ...track, album }}
+            index={track.trackNumber || undefined}
+            onAddToPlaylist={setAddToPlaylistTrack}
+          />
         ))}
       </div>
+
+      {addToPlaylistTrack && (
+        <AddToPlaylistModal
+          track={addToPlaylistTrack}
+          onClose={() => setAddToPlaylistTrack(null)}
+        />
+      )}
     </div>
   );
 }

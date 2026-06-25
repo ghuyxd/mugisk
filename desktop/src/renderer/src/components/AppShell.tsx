@@ -2,6 +2,7 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 
 import NowPlayingBar from "./NowPlayingBar";
+import QueuePanel from "./QueuePanel";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
@@ -27,6 +28,9 @@ export default function AppShell(): React.JSX.Element {
 
       {/* Persistent now-playing footer */}
       <NowPlayingBar />
+
+      {/* Slide-in queue panel (portal-style, rendered outside grid flow) */}
+      <QueuePanel />
     </div>
   );
 }

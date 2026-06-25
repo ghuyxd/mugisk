@@ -5,11 +5,14 @@ import { searchAll, type SearchResults } from "@renderer/api/library";
 import TrackRow from "@renderer/components/TrackRow";
 import AlbumCard from "@renderer/components/AlbumCard";
 import ArtistCard from "@renderer/components/ArtistCard";
+import AddToPlaylistModal from "@renderer/components/AddToPlaylistModal";
+import type { QueueTrack } from "@renderer/context/PlayerContext";
 
 export default function SearchPage(): React.JSX.Element {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(false);
+  const [addToPlaylistTrack, setAddToPlaylistTrack] = useState<QueueTrack | null>(null);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -73,7 +76,12 @@ export default function SearchPage(): React.JSX.Element {
               <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 16 }}>Songs</h2>
               <div className="track-list">
                 {results.tracks.map((track, i) => (
-                  <TrackRow key={track.id} track={track} index={i + 1} />
+                  <TrackRow
+                    key={track.id}
+                    track={track}
+                    index={i + 1}
+                    onAddToPlaylist={setAddToPlaylistTrack}
+                  />
                 ))}
               </div>
             </section>
@@ -111,6 +119,13 @@ export default function SearchPage(): React.JSX.Element {
               </div>
             )}
         </div>
+      )}
+
+      {addToPlaylistTrack && (
+        <AddToPlaylistModal
+          track={addToPlaylistTrack}
+          onClose={() => setAddToPlaylistTrack(null)}
+        />
       )}
     </div>
   );

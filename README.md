@@ -1,155 +1,95 @@
 # Mugisk
 
-> Self-hosted music streaming platform — own your music, own your server.
+Mugisk is a self-hosted, full-stack music streaming platform designed for personal use. It features an automated library scanner, a web-based Admin Panel, and a cross-platform Electron desktop client.
 
----
+## Features & Roadmap Traceability
 
-## Repository Layout
+- **Phase 1 (Scaffolding):** Monorepo structure, database schemas (Prisma), Next.js backend, shared types.
+- **Phase 2 (Auth):** Secure JWT with refresh-token rotation.
+- **Phase 3 (Library Sync):** `chokidar`-based background service for automatic music folder scanning.
+- **Phase 4 (Core API):** Audio streaming with HTTP Range requests, cover art extraction.
+- **Phase 5 (Admin Panel):** Next.js Server Components-based web dashboard to manage the system.
+- **Phase 6 (Desktop Shell):** Cross-platform Electron client with custom window controls and routing.
+- **Phase 7 (Playlists & UI):** Drag-and-drop playlist management, persistent playback state.
+- **Phase 8 (AI Features):** Generative AI integration (Gemini) for automatic playlist generation.
+- **Phase 9 (Deployment):** Multi-stage Docker packaging, release builds, and comprehensive documentation.
 
-```
-mugisk/                         ← monorepo root (pnpm workspaces)
-├── server/                     ← @mugisk/server  · Next.js 16 (App Router)
-│   ├── prisma/
-│   │   └── schema.prisma       ← Prisma schema (PostgreSQL)
-│   ├── src/
-│   │   ├── app/                ← Next.js App Router pages & API routes
-│   │   │   ├── layout.tsx
-│   │   │   ├── page.tsx        ← Home / landing page
-│   │   │   ├── admin/          ← Admin Panel (future phase)
-│   │   │   └── api/
-│   │   │       └── health/     ← GET /api/health
-│   │   └── lib/
-│   │       └── prisma.ts       ← Prisma client singleton
-│   └── Dockerfile              ← Placeholder (implemented in a future phase)
-│
-├── desktop/                    ← @mugisk/desktop · Electron + React + Vite
-│   └── src/
-│       ├── main/               ← Electron main process
-│       │   └── index.ts
-│       ├── preload/            ← Electron preload (contextBridge)
-│       │   └── index.ts
-│       └── renderer/           ← React renderer process
-│           ├── index.html
-│           └── src/
-│               ├── main.tsx
-│               ├── App.tsx
-│               ├── env.d.ts
-│               └── assets/
-│                   └── index.css
-│
-├── packages/
-│   └── shared-types/           ← @mugisk/shared-types · shared TS interfaces
-│       └── src/
-│           └── index.ts        ← User, Track, Album, Artist, Playlist, …
-│
-├── docker-compose.yml          ← postgres (named volume) + server stub
-├── .env.example                ← All env vars documented
-├── .eslintrc.cjs               ← Root ESLint config (shared)
-├── .prettierrc.json            ← Root Prettier config (shared)
-├── tsconfig.base.json          ← Base TypeScript config extended by all packages
-├── pnpm-workspace.yaml         ← pnpm workspace definition
-└── package.json                ← Root scripts + dev dependencies
+## Architecture Overview
+
+```mermaid
+graph TD
+    subgraph Desktop Client
+        E[Electron Main Process]
+        R[React Renderer]
+        E <-->|IPC| R
+    end
+
+    subgraph Server Container
+        N[Next.js API & Admin]
+        W[Chokidar File Watcher]
+        N -.-> W
+    end
+
+    subgraph Database
+        DB[(PostgreSQL)]
+    end
+
+    subgraph External
+        FS[(Music Filesystem)]
+        AI((Gemini API))
+    end
+
+    R <-->|HTTP/REST| N
+    N <-->|Prisma ORM| DB
+    W -->|Reads| FS
+    N -->|Streams| FS
+    N <-->|Prompts| AI
 ```
 
----
+## Environment Variables Reference
 
-## Tech Stack
+| Variable | Required | Description |
+|---|---|---|
+| `POSTGRES_USER` | Yes | Database username (default: `mugisk`) |
+| `POSTGRES_PASSWORD` | Yes | Database password |
+| `POSTGRES_DB` | Yes | Database name (default: `mugisk`) |
+| `DATABASE_URL` | Yes | Prisma connection string |
+| `JWT_SECRET` | Yes | Secret for signing access tokens |
+| `JWT_REFRESH_SECRET` | Yes | Secret for signing refresh tokens |
+| `MUSIC_LIBRARY_PATH` | Yes | Host path to the music folder |
+| `AI_API_KEY` | No | Google Gemini API key for AI playlists |
 
-| Layer            | Technology                                           |
-|------------------|------------------------------------------------------|
-| **Backend**      | Next.js 16 (App Router), TypeScript, Node.js         |
-| **Database**     | PostgreSQL 16, Prisma ORM                            |
-| **Desktop**      | Electron 34, React 18, Vite (electron-vite)          |
-| **Styling**      | Tailwind CSS v4 (server), Vanilla CSS (desktop)      |
-| **Auth**         | JWT (access + refresh tokens), bcryptjs, jose        |
-| **File Watching**| chokidar                                             |
-| **Tag Parsing**  | music-metadata                                       |
-| **Shared Types** | `@mugisk/shared-types` workspace package             |
-| **Deployment**   | Docker, Docker Compose                               |
-| **AI (Phase N)** | Anthropic / OpenAI (optional integration)            |
-| **Tooling**      | pnpm workspaces, ESLint, Prettier, TypeScript strict |
+## Local Development Setup
 
----
+1. **Install Dependencies:** `pnpm install`
+2. **Start Database:** `docker compose up -d postgres`
+3. **Migrate & Seed:** `pnpm --filter @mugisk/server run db:migrate:deploy && pnpm --filter @mugisk/server run db:seed`
+4. **Run Server:** `pnpm --filter @mugisk/server run dev`
+5. **Run Desktop App:** `pnpm --filter @mugisk/desktop run dev`
 
-## Getting Started
+## Docker Production Setup
 
-### Prerequisites
-
-- **Node.js** ≥ 20
-- **pnpm** ≥ 9 (`npm install -g pnpm`)
-- **Docker** + **Docker Compose** (for the database)
-
-### 1 — Clone and install
+Run the entire stack easily using Docker Compose:
 
 ```bash
-git clone https://github.com/your-org/mugisk.git
-cd mugisk
-pnpm install
+docker compose up -d --build
 ```
 
-### 2 — Configure environment
+The Next.js server will be available on `http://localhost:3000`.
 
-```bash
-cp .env.example .env
-# Edit .env — at minimum set DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET
-```
+## API Endpoint Reference
 
-### 3 — Start the database
-
-```bash
-docker compose up postgres -d
-```
-
-### 4 — Run Prisma migrations
-
-```bash
-pnpm db:migrate     # creates tables (dev only)
-# or
-pnpm db:push        # push schema without migration history
-```
-
-### 5 — Start development servers
-
-```bash
-# Start both Next.js server and Electron desktop concurrently:
-pnpm dev
-
-# Or individually:
-pnpm dev:server     # Next.js on http://localhost:3000
-pnpm dev:desktop    # Electron window
-```
-
-### Useful scripts
-
-| Command              | Description                                      |
-|----------------------|--------------------------------------------------|
-| `pnpm dev`           | Start both server and desktop in watch mode      |
-| `pnpm dev:server`    | Start Next.js dev server only                    |
-| `pnpm dev:desktop`   | Start Electron dev window only                   |
-| `pnpm build`         | Production build for all packages                |
-| `pnpm lint`          | Run ESLint across the entire monorepo            |
-| `pnpm format`        | Run Prettier across the entire monorepo          |
-| `pnpm typecheck`     | Run `tsc --noEmit` across all packages           |
-| `pnpm db:generate`   | Regenerate Prisma client after schema changes    |
-| `pnpm db:migrate`    | Create and apply a new Prisma migration          |
-| `pnpm db:studio`     | Open Prisma Studio in the browser                |
+| Method | Path | Auth Required | Description |
+|---|---|---|---|
+| `POST` | `/api/auth/login` | No | Authenticate user and receive tokens |
+| `POST` | `/api/auth/refresh` | No (needs refresh token) | Obtain a new access token |
+| `GET`  | `/api/tracks` | Yes | List all available tracks |
+| `GET`  | `/api/tracks/:id/stream` | Yes | Stream audio file (supports HTTP Range) |
+| `GET`  | `/api/tracks/:id/cover` | Yes | Retrieve extracted cover art |
+| `GET`  | `/api/playlists` | Yes | List user's playlists |
+| `POST` | `/api/playlists` | Yes | Create a new playlist |
+| `POST` | `/api/playlists/generate`| Yes | Generate AI playlist (requires `AI_API_KEY`) |
+| `POST` | `/api/admin/library/upload`| Yes (Admin) | Upload new tracks directly to the library |
 
 ---
-
-## Roadmap
-
-This repository is currently in **Phase 1 — Scaffolding**.
-
-Future phases will add:
-
-- **Phase 2** — Library scanning (chokidar + music-metadata), REST/tRPC API, Prisma full schema
-- **Phase 3** — JWT auth with refresh token rotation, Admin Panel UI
-- **Phase 4** — Desktop player UI (Feishin-style), IPC communication, streaming
-- **Phase 5** — Production Docker build, CI/CD pipeline
-- **Phase N** — AI integration (auto-tagging, playlist generation via Anthropic/OpenAI)
-
----
-
-## License
-
-MIT
+*Developed for Phase 9 Defense.*

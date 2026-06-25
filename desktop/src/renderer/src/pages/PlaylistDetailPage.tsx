@@ -4,13 +4,15 @@ import { ListMusic, Play } from "lucide-react";
 
 import { getPlaylist, removeTrackFromPlaylist, type PlaylistDetail } from "@renderer/api/library";
 import TrackRow from "@renderer/components/TrackRow";
-import { usePlayer } from "@renderer/context/PlayerContext";
+import AddToPlaylistModal from "@renderer/components/AddToPlaylistModal";
+import { usePlayer, type QueueTrack } from "@renderer/context/PlayerContext";
 
 export default function PlaylistDetailPage(): React.JSX.Element {
   const { id } = useParams<{ id: string }>();
   const [playlist, setPlaylist] = useState<PlaylistDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const { playAll } = usePlayer();
+  const [addToPlaylistTrack, setAddToPlaylistTrack] = useState<QueueTrack | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -138,9 +140,17 @@ export default function PlaylistDetailPage(): React.JSX.Element {
               index={i + 1}
               playlistId={playlist.id}
               onRemoveFromPlaylist={handleRemoveTrack}
+              onAddToPlaylist={setAddToPlaylistTrack}
             />
           ))}
         </div>
+      )}
+
+      {addToPlaylistTrack && (
+        <AddToPlaylistModal
+          track={addToPlaylistTrack}
+          onClose={() => setAddToPlaylistTrack(null)}
+        />
       )}
     </div>
   );

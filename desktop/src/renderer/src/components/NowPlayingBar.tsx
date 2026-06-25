@@ -2,7 +2,7 @@
  * NowPlayingBar — integrates with PlayerContext.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React from "react";
 import {
   Heart,
   Music,

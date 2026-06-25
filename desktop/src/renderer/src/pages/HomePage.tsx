@@ -63,7 +63,7 @@ export default function HomePage(): React.JSX.Element {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                background: "var(--brand)",
+                background: "var(--accent)",
                 color: "white",
                 border: "none",
                 padding: "8px 16px",
