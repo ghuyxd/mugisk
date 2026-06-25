@@ -90,6 +90,6 @@ Once your server is accessible at `https://music.yourdomain.com`, you need to co
 1. Open the Mugisk desktop app.
 2. In the login screen (or settings), locate the **Server URL** input field.
 3. Change it from `http://localhost:3000` to `https://music.yourdomain.com`.
-4. Log in with your admin credentials.
+4. Register a new account or log in with your admin credentials.
 
 All streaming, library operations, and API calls will now route securely through your public domain.

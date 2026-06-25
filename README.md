@@ -103,6 +103,7 @@ For detailed desktop client build instructions, see [docs/BUILDING.md](docs/BUIL
 |--------|------|---------------|-------------|
 | `GET` | `/api/health` | No | Server health check |
 | `POST` | `/api/auth/login` | No | Authenticate and get JWT |
+| `POST` | `/api/auth/register` | No | Register a new user account |
 | `POST` | `/api/auth/refresh` | No (needs refresh token) | Refresh access token |
 | `GET` | `/api/library/artists` | Yes | List all artists |
 | `GET` | `/api/library/albums` | Yes | List all albums |
