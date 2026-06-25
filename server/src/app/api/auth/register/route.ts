@@ -12,6 +12,10 @@ import { prisma } from "@/lib/prisma";
 import { authRateLimiter } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/middleware";
 import { Prisma } from "@prisma/client";
+import { corsHeaders, handleOptions } from "@/lib/cors";
+import { signAccessToken, generateRefreshToken, hashToken, REFRESH_TOKEN_TTL_MS } from "@/lib/auth";
+
+export { handleOptions as OPTIONS };
 
 const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -36,7 +40,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!authRateLimiter.check(`register:${ip}`)) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
-      { status: 429 },
+      { status: 429, headers: corsHeaders() },
     );
   }
 
@@ -45,14 +49,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400, headers: corsHeaders() });
   }
 
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
-      { status: 400 },
+      { status: 400, headers: corsHeaders() },
     );
   }
 
@@ -70,21 +74,43 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         passwordHash,
         // role defaults to USER in schema
       },
-      select: { id: true, email: true, username: true, role: true, createdAt: true },
     });
 
-    return NextResponse.json({ user }, { status: 201 });
+    // Issue tokens automatically
+    const accessToken = await signAccessToken({ sub: user.id, role: user.role });
+    const refreshToken = generateRefreshToken();
+    const refreshTokenHash = hashToken(refreshToken);
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
+
+    await prisma.session.create({
+      data: {
+        userId: user.id,
+        refreshTokenHash,
+        expiresAt,
+        userAgent: req.headers.get("user-agent") ?? undefined,
+        ipAddress: getClientIp(req),
+      },
+    });
+
+    return NextResponse.json(
+      {
+        accessToken,
+        refreshToken,
+        user: { id: user.id, username: user.username, role: user.role },
+      },
+      { status: 201, headers: corsHeaders() },
+    );
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       // Unique constraint violation — determine which field
       const target = (err.meta?.target as string[] | undefined) ?? [];
       if (target.includes("email")) {
-        return NextResponse.json({ error: "Email already in use" }, { status: 409 });
+        return NextResponse.json({ error: "Email already in use" }, { status: 409, headers: corsHeaders() });
       }
       if (target.includes("username")) {
-        return NextResponse.json({ error: "Username already taken" }, { status: 409 });
+        return NextResponse.json({ error: "Username already taken" }, { status: 409, headers: corsHeaders() });
       }
-      return NextResponse.json({ error: "Account already exists" }, { status: 409 });
+      return NextResponse.json({ error: "Account already exists" }, { status: 409, headers: corsHeaders() });
     }
     throw err;
   }

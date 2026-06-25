@@ -33,6 +33,36 @@ export async function login(payload: LoginPayload): Promise<AuthTokens> {
   return data;
 }
 
+export interface RegisterPayload {
+  serverUrl: string;
+  email: string;
+  username: string;
+  password: string;
+}
+
+/**
+ * Register a new account on the Mugisk server.
+ * Stores tokens and serverUrl on success.
+ */
+export async function register(payload: RegisterPayload): Promise<AuthTokens> {
+  const base = payload.serverUrl.replace(/\/$/, "");
+
+  const { data } = await axios.post<AuthTokens>(`${base}/api/auth/register`, {
+    email: payload.email,
+    username: payload.username,
+    password: payload.password,
+  });
+
+  // Persist serverUrl + tokens via IPC
+  await window.api.store.set("serverUrl", base);
+  await window.api.token.set({
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+  });
+
+  return data;
+}
+
 
 /**
  * Log out: clear tokens from OS keychain.

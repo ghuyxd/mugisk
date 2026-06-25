@@ -13,6 +13,8 @@ import AlbumDetailPage from "@renderer/pages/AlbumDetailPage";
 import ArtistDetailPage from "@renderer/pages/ArtistDetailPage";
 import PlaylistDetailPage from "@renderer/pages/PlaylistDetailPage";
 
+import RegisterPage from "@renderer/pages/RegisterPage";
+
 // ── Loading screen while auth state initialises ──────────────────────────────
 
 function InitLoader(): React.JSX.Element {
@@ -75,7 +77,10 @@ const router = createHashRouter([
   {
     // Guest-only routes
     element: <RequireGuest />,
-    children: [{ path: "login", element: <LoginPage /> }],
+    children: [
+      { path: "login", element: <LoginPage /> },
+      { path: "register", element: <RegisterPage /> },
+    ],
   },
 ]);
 

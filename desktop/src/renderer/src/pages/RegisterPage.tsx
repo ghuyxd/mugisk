@@ -1,15 +1,16 @@
 import React, { useCallback, useState } from "react";
-import { AlertCircle, Lock, Server } from "lucide-react";
+import { AlertCircle, Lock, Server, User, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { login } from "@renderer/api/auth";
+import { register } from "@renderer/api/auth";
 import { useAuth } from "@renderer/context/AuthContext";
 
-export default function LoginPage(): React.JSX.Element {
+export default function RegisterPage(): React.JSX.Element {
   const { markAuthenticated } = useAuth();
 
   const [serverUrl, setServerUrl] = useState("");
-  const [identifier, setIdentifier] = useState("");
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,31 +24,39 @@ export default function LoginPage(): React.JSX.Element {
         setError("Please enter the server URL.");
         return;
       }
-      if (!identifier.trim() || !password) {
-        setError("Please enter your email/username and password.");
+      if (!email.trim() || !username.trim() || !password) {
+        setError("Please fill in all fields.");
         return;
       }
 
       setLoading(true);
       try {
-        await login({ serverUrl: serverUrl.trim(), identifier: identifier.trim(), password });
+        await register({
+          serverUrl: serverUrl.trim(),
+          email: email.trim(),
+          username: username.trim(),
+          password,
+        });
         markAuthenticated();
-      } catch (err: unknown) {
-        const msg =
-          err instanceof Error ? err.message : "Login failed. Check your credentials.";
-        // Surface cleaner messages for common axios errors
-        if (msg.includes("Network Error") || msg.includes("ECONNREFUSED")) {
-          setError("Cannot reach the server. Check the URL and try again.");
-        } else if (msg.includes("401") || msg.includes("403")) {
-          setError("Invalid email or password.");
+      } catch (err: any) {
+        if (err.response?.data?.error) {
+           setError(err.response.data.error);
+        } else if (err.response?.data?.details) {
+           const firstError = Object.values(err.response.data.details)[0];
+           setError(Array.isArray(firstError) ? firstError[0] : "Validation failed");
         } else {
-          setError("Login failed. Check your credentials and server URL.");
+           const msg = err instanceof Error ? err.message : "Registration failed.";
+           if (msg.includes("Network Error") || msg.includes("ECONNREFUSED")) {
+             setError("Cannot reach the server. Check the URL and try again.");
+           } else {
+             setError("Registration failed. Please check your details.");
+           }
         }
       } finally {
         setLoading(false);
       }
     },
-    [serverUrl, identifier, password, markAuthenticated],
+    [serverUrl, email, username, password, markAuthenticated],
   );
 
   return (
@@ -59,8 +68,8 @@ export default function LoginPage(): React.JSX.Element {
         {/* Logo */}
         <div className="login-logo">M</div>
 
-        <h1 className="login-title">Welcome to Mugisk</h1>
-        <p className="login-subtitle">Sign in to your music server</p>
+        <h1 className="login-title">Create Account</h1>
+        <p className="login-subtitle">Join your music server</p>
 
         {error && (
           <div className="form-error" role="alert">
@@ -72,12 +81,12 @@ export default function LoginPage(): React.JSX.Element {
         <form onSubmit={handleSubmit} noValidate>
           {/* Server URL */}
           <div className="form-group">
-            <label className="form-label" htmlFor="login-server-url">
+            <label className="form-label" htmlFor="register-server-url">
               <Server size={11} style={{ display: "inline", marginRight: 4 }} />
               Server URL
             </label>
             <input
-              id="login-server-url"
+              id="register-server-url"
               className={`form-input${error && !serverUrl ? " error" : ""}`}
               type="url"
               placeholder="http://localhost:3000"
@@ -88,18 +97,37 @@ export default function LoginPage(): React.JSX.Element {
             />
           </div>
 
-          {/* Email or username */}
+          {/* Email */}
           <div className="form-group">
-            <label className="form-label" htmlFor="login-identifier">
-              Email or Username
+            <label className="form-label" htmlFor="register-email">
+              <Mail size={11} style={{ display: "inline", marginRight: 4 }} />
+              Email
             </label>
             <input
-              id="login-identifier"
+              id="register-email"
+              className="form-input"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              disabled={loading}
+            />
+          </div>
+
+          {/* Username */}
+          <div className="form-group">
+            <label className="form-label" htmlFor="register-username">
+              <User size={11} style={{ display: "inline", marginRight: 4 }} />
+              Username
+            </label>
+            <input
+              id="register-username"
               className="form-input"
               type="text"
-              placeholder="you@example.com or admin"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="myusername"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
               disabled={loading}
             />
@@ -107,24 +135,24 @@ export default function LoginPage(): React.JSX.Element {
 
           {/* Password */}
           <div className="form-group">
-            <label className="form-label" htmlFor="login-password">
+            <label className="form-label" htmlFor="register-password">
               <Lock size={11} style={{ display: "inline", marginRight: 4 }} />
               Password
             </label>
             <input
-              id="login-password"
+              id="register-password"
               className="form-input"
               type="password"
-              placeholder="••••••••"
+              placeholder="Min 8 chars, 1 uppercase, 1 digit"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+              autoComplete="new-password"
               disabled={loading}
             />
           </div>
 
           <button
-            id="login-submit-btn"
+            id="register-submit-btn"
             type="submit"
             className="btn-primary"
             disabled={loading}
@@ -132,17 +160,17 @@ export default function LoginPage(): React.JSX.Element {
             {loading ? (
               <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <span className="spinner" />
-                Signing in…
+                Registering…
               </span>
             ) : (
-              "Sign in"
+              "Sign up"
             )}
           </button>
           
           <div style={{ marginTop: 16, textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)" }}>
-            Don't have an account?{" "}
-            <Link to="/register" style={{ color: "var(--primary)", textDecoration: "none" }}>
-              Register
+            Already have an account?{" "}
+            <Link to="/login" style={{ color: "var(--primary)", textDecoration: "none" }}>
+              Sign in
             </Link>
           </div>
         </form>
