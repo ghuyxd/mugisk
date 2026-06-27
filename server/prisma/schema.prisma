@@ -44,9 +44,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  sessions    Session[]
-  playlists   Playlist[]
-  playHistory PlayHistory[]
+  sessions       Session[]
+  playlists      Playlist[]
+  playHistory    PlayHistory[]
+  favoriteTracks FavoriteTrack[]
 
   @@index([email])
   @@map("users")
@@ -122,6 +123,7 @@ model Track {
   lyrics         Lyrics?
   playlistTracks PlaylistTrack[]
   playHistory    PlayHistory[]
+  favoritedBy    FavoriteTrack[]
 
   @@index([artistId])
   @@index([albumId])
@@ -202,4 +204,19 @@ model Lyrics {
   track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
 
   @@map("lyrics")
+}
+
+/// A track favorited by a user.
+model FavoriteTrack {
+  id        String   @id @default(cuid())
+  userId    String
+  trackId   String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track     Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, trackId])
+  @@index([userId])
+  @@map("favorite_tracks")
 }

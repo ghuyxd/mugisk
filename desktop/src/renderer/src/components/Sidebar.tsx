@@ -10,6 +10,7 @@ import {
   Search,
   Settings,
   Tag,
+  Heart
 } from "lucide-react";
 
 interface NavItem {
@@ -24,6 +25,7 @@ const mainNav: NavItem[] = [
 ];
 
 const libraryNav: NavItem[] = [
+  { to: "/library/favorites", icon: <Heart size={16} />, label: "Favorites" },
   { to: "/library/albums", icon: <Disc3 size={16} />, label: "Albums" },
   { to: "/library/artists", icon: <Mic2 size={16} />, label: "Artists" },
   { to: "/library/songs", icon: <Music2 size={16} />, label: "Songs" },

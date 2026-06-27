@@ -22,12 +22,17 @@
   "dependencies": {
     "@mugisk/shared-types": "workspace:*",
     "@prisma/client": "^6.2.1",
+    "aromanize": "^0.1.5",
     "bcryptjs": "^2.4.3",
     "chokidar": "^4.0.3",
+    "franc-min": "^6.2.0",
     "jose": "^5.9.6",
+    "kuroshiro": "^1.2.0",
+    "kuroshiro-analyzer-kuromoji": "^1.1.0",
     "music-metadata": "^11.3.0",
     "next": "16.2.9",
     "openai": "^6.45.0",
+    "pinyin-pro": "^3.28.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zod": "^3.24.1"

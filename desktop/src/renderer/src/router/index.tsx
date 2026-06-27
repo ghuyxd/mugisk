@@ -12,6 +12,7 @@ import SettingsPage from "@renderer/pages/SettingsPage";
 import AlbumDetailPage from "@renderer/pages/AlbumDetailPage";
 import ArtistDetailPage from "@renderer/pages/ArtistDetailPage";
 import PlaylistDetailPage from "@renderer/pages/PlaylistDetailPage";
+import FavoritesPage from "@renderer/pages/FavoritesPage";
 
 import RegisterPage from "@renderer/pages/RegisterPage";
 
@@ -62,6 +63,7 @@ const router = createHashRouter([
         element: <AppShell />,
         children: [
           { index: true, element: <HomePage /> },
+          { path: "library/favorites", element: <FavoritesPage /> },
           { path: "library", element: <LibraryPage /> },
           { path: "library/:tab", element: <LibraryPage /> },
           { path: "albums/:id", element: <AlbumDetailPage /> },

@@ -51,6 +51,7 @@ export interface Track {
   codec?: string;
   filePath: string;
   coverArtId?: string;
+  isFavorite?: boolean;
   createdAt: string;
   updatedAt: string;
 }

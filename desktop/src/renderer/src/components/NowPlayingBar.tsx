@@ -18,6 +18,7 @@ import { usePlayer } from "../context/PlayerContext";
 import { getServerUrlSync } from "../api/axios";
 import QueuePanel from "./QueuePanel";
 import LyricsPanel from "./LyricsPanel";
+import { useFavorites } from "../context/FavoritesContext";
 
 function formatTime(seconds: number): string {
   if (isNaN(seconds)) return "0:00";
@@ -28,11 +29,13 @@ function formatTime(seconds: number): string {
 
 export default function NowPlayingBar(): React.JSX.Element {
   const player = usePlayer();
+  const { favoriteIds, toggleFavorite } = useFavorites();
   const [showQueue, setShowQueue] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
 
   const duration = player.currentTrack?.duration || 0;
   const currentTime = player.progress * duration;
+  const isFavorite = player.currentTrack ? favoriteIds.has(player.currentTrack.id) : false;
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const bounds = e.currentTarget.getBoundingClientRect();
@@ -49,6 +52,12 @@ export default function NowPlayingBar(): React.JSX.Element {
   const handleToggleVolume = () => {
     if (player.volume === 0) player.setVolume(1);
     else player.setVolume(0);
+  };
+
+  const handleToggleFavorite = () => {
+    if (player.currentTrack) {
+      toggleFavorite(player.currentTrack.id);
+    }
   };
 
   return (
@@ -76,8 +85,13 @@ export default function NowPlayingBar(): React.JSX.Element {
               {player.currentTrack?.artist || "—"}
             </div>
           </div>
-          <button className="bar-heart" aria-label="Like track">
-            <Heart size={14} />
+          <button 
+            className="bar-heart" 
+            aria-label={isFavorite ? "Unlike track" : "Like track"}
+            onClick={handleToggleFavorite}
+            style={{ color: isFavorite ? "var(--primary)" : "var(--text-muted)" }}
+          >
+            <Heart size={14} fill={isFavorite ? "currentColor" : "none"} />
           </button>
         </div>
 
