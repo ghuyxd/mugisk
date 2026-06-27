@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Playlist } from "@mugisk/shared-types";
 import { getPlaylists, createPlaylist, deletePlaylist } from "../api/library";
-import { ListMusic, Plus, Trash2 } from "lucide-react";
+import { generateSmartPlaylist } from "../api/ai";
+import { ListMusic, Plus, Trash2, Sparkles } from "lucide-react";
 
 export default function PlaylistsPage(): React.JSX.Element {
   const navigate = useNavigate();
@@ -24,6 +25,25 @@ export default function PlaylistsPage(): React.JSX.Element {
   useEffect(() => {
     fetchPlaylists();
   }, []);
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  const handleGenerateSmartPlaylist = async () => {
+    try {
+      setIsGenerating(true);
+      const playlist = await generateSmartPlaylist();
+      navigate(`/playlists/${playlist.id}`);
+    } catch (err: any) {
+      console.error(err);
+      if (err?.response?.status === 403) {
+        alert("AI features are currently unconfigured on the server.");
+      } else {
+        alert("Failed to generate smart playlist");
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const [isCreating, setIsCreating] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
@@ -81,9 +101,31 @@ export default function PlaylistsPage(): React.JSX.Element {
             }} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text)", padding: "6px 12px", borderRadius: 4, cursor: "pointer" }}>Cancel</button>
           </div>
         ) : (
-          <button className="primary-btn" style={{ display: "flex", alignItems: "center", gap: 8 }} onClick={() => setIsCreating(true)}>
-            <Plus size={16} /> New Playlist
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button 
+              className="primary-btn" 
+              style={{ display: "flex", alignItems: "center", gap: 8 }} 
+              onClick={() => setIsCreating(true)}
+            >
+              <Plus size={16} /> New Playlist
+            </button>
+            <button 
+              className="primary-btn"
+              style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: 8, 
+                background: "var(--primary-dim)", 
+                color: "var(--primary)",
+                border: "1px solid var(--primary)"
+              }} 
+              onClick={handleGenerateSmartPlaylist}
+              disabled={isGenerating}
+              title={isGenerating ? "Analyzing your music taste..." : "Generate AI Smart Playlist"}
+            >
+              <Sparkles size={16} /> {isGenerating ? "Analyzing your music taste..." : "Generate Smart Playlist"}
+            </button>
+          </div>
         )}
       </div>
 

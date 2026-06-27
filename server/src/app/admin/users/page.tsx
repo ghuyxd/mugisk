@@ -45,6 +45,14 @@ export default function UsersPage() {
   const [busy, setBusy] = useState<string | null>(null); // userId being acted on
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newRole, setNewRole] = useState<"USER" | "ADMIN">("USER");
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+
   const fetchUsers = useCallback(async (q: string, p: number) => {
     setLoading(true);
     setError("");
@@ -117,6 +125,42 @@ export default function UsersPage() {
     else if (dialog.type === "revoke") void revokeAllSessions(dialog.user.id);
   }
 
+  async function handleCreateUser(e: React.FormEvent) {
+    e.preventDefault();
+    setCreateError("");
+    setIsCreating(true);
+    
+    try {
+      const res = await apiFetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newEmail,
+          username: newUsername,
+          password: newPassword,
+          role: newRole
+        })
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to create user");
+      }
+      
+      setShowCreateModal(false);
+      setNewEmail("");
+      setNewUsername("");
+      setNewPassword("");
+      setNewRole("USER");
+      showToast("User created successfully");
+      await fetchUsers(search, page);
+    } catch (e: any) {
+      setCreateError(e.message);
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
   return (
     <>
       <div className="page-heading">
@@ -128,7 +172,7 @@ export default function UsersPage() {
       {toast && <div className="alert alert--success">{toast}</div>}
 
       <div className="table-container">
-        <div className="table-toolbar">
+        <div className="table-toolbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div className="table-search">
             <span className="table-search-icon">🔍</span>
             <input
@@ -140,6 +184,9 @@ export default function UsersPage() {
               onChange={(e) => handleSearchChange(e.target.value)}
             />
           </div>
+          <button className="btn btn--primary" onClick={() => setShowCreateModal(true)}>
+            + Create User
+          </button>
         </div>
 
         {loading ? (
@@ -287,6 +334,86 @@ export default function UsersPage() {
         onConfirm={handleDialogConfirm}
         onCancel={() => setDialog(null)}
       />
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div className="dialog-backdrop" role="presentation">
+          <div className="dialog" style={{ maxWidth: 450 }} role="dialog">
+            <h3 className="dialog-title">Create New User</h3>
+            {createError && <div className="alert alert--error" style={{ marginBottom: 16 }}>{createError}</div>}
+            
+            <form onSubmit={handleCreateUser} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label className="form-label" style={{ display: "block", marginBottom: 4 }}>Username</label>
+                <input 
+                  type="text" 
+                  style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid var(--color-border)", background: "var(--color-bg-darker)", color: "var(--color-text)" }}
+                  required 
+                  minLength={3}
+                  maxLength={30}
+                  value={newUsername} 
+                  onChange={e => setNewUsername(e.target.value)} 
+                />
+              </div>
+              
+              <div>
+                <label className="form-label" style={{ display: "block", marginBottom: 4 }}>Email</label>
+                <input 
+                  type="email" 
+                  style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid var(--color-border)", background: "var(--color-bg-darker)", color: "var(--color-text)" }}
+                  required 
+                  value={newEmail} 
+                  onChange={e => setNewEmail(e.target.value)} 
+                />
+              </div>
+              
+              <div>
+                <label className="form-label" style={{ display: "block", marginBottom: 4 }}>Password</label>
+                <input 
+                  type="password" 
+                  style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid var(--color-border)", background: "var(--color-bg-darker)", color: "var(--color-text)" }}
+                  required 
+                  minLength={8}
+                  value={newPassword} 
+                  onChange={e => setNewPassword(e.target.value)} 
+                />
+                <small className="text-muted" style={{ display: "block", marginTop: 4 }}>Must be at least 8 chars, 1 uppercase, 1 digit.</small>
+              </div>
+              
+              <div>
+                <label className="form-label" style={{ display: "block", marginBottom: 4 }}>Role</label>
+                <select 
+                  className="select" 
+                  style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid var(--color-border)", background: "var(--color-bg-darker)", color: "var(--color-text)" }}
+                  value={newRole} 
+                  onChange={e => setNewRole(e.target.value as "USER" | "ADMIN")}
+                >
+                  <option value="USER">USER</option>
+                  <option value="ADMIN">ADMIN</option>
+                </select>
+              </div>
+              
+              <div className="dialog-actions" style={{ marginTop: 16 }}>
+                <button 
+                  type="button" 
+                  className="btn btn--ghost" 
+                  onClick={() => setShowCreateModal(false)}
+                  disabled={isCreating}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn--primary"
+                  disabled={isCreating}
+                >
+                  {isCreating ? "Creating..." : "Create"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

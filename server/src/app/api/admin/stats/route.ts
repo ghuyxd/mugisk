@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import { withAdmin } from "@/lib/middleware";
 import { prisma } from "@/lib/prisma";
+import { isAiEnabled } from "@/lib/ai";
 
 export const GET = withAdmin(async () => {
   const [totalUsers, totalTracks, totalAlbums, recentUploads, tracks] =
@@ -45,7 +46,7 @@ export const GET = withAdmin(async () => {
     recentUploads,
     config: {
       musicLibraryPath: process.env.MUSIC_LIBRARY_PATH ?? null,
-      aiKeyConfigured: Boolean(process.env.AI_API_KEY),
+      aiKeyConfigured: isAiEnabled(),
     },
   });
 });

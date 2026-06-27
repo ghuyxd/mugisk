@@ -28,6 +28,7 @@ import path from "path";
 import { parseFile } from "music-metadata";
 import { prisma } from "@/lib/prisma";
 import { saveCoverArt } from "@/lib/library/covers";
+import { runAutoTagger } from "@/lib/library/autoTagger";
 import { ScanType, ScanStatus } from "@prisma/client";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -223,6 +224,11 @@ export async function indexFile(
         message: `Indexed "${title}" by "${artistName}"`,
       },
     });
+
+    // ── 9. Auto-Tagging Hook (Best-Effort) ───────────────────────────────────
+    if (!genre || genre === "Unknown") {
+      void runAutoTagger(track.id, title, artistName, albumTitle ?? undefined);
+    }
 
     return { status: "indexed", trackId: track.id };
   } catch (err) {
