@@ -27,12 +27,24 @@ const nextConfig: NextConfig = {
     "sharp",
   ],
 
-  // Inject CORS headers on all API routes
   async headers() {
     return [
       {
         source: "/api/:path*",
         headers: CORS_HEADERS,
+      },
+      {
+        source: "/covers/:path*",
+        headers: CORS_HEADERS,
+      },
+    ];
+  },
+
+  async rewrites() {
+    return [
+      {
+        source: "/covers/:path*",
+        destination: "/api/covers/:path*",
       },
     ];
   },

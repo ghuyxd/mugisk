@@ -39,7 +39,7 @@ function mapAlbum(a: any): Album {
   return {
     ...a,
     artist: a.artist?.name || "Unknown Artist",
-    trackCount: a._count?.tracks ?? a.trackCount ?? 0,
+    trackCount: a.tracks?.length ?? a._count?.tracks ?? a.trackCount ?? 0,
     duration: a.duration || 0,
     coverArtId: a.coverUrl || a.coverArtId || undefined
   };
