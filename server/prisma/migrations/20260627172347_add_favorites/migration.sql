@@ -1,12 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the column `romanizedLyrics` on the `lyrics` table. All the data in the column will be lost.
-
-*/
--- AlterTable
-ALTER TABLE "lyrics" DROP COLUMN "romanizedLyrics";
-
 -- CreateTable
 CREATE TABLE "favorite_tracks" (
     "id" TEXT NOT NULL,

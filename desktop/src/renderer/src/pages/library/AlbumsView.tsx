@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import type { Album } from "@mugisk/shared-types";
 import { getAlbums } from "../../api/library";
 import { getServerUrlSync } from "../../api/axios";
+import { useFavorites } from "../../context/FavoritesContext";
 import { Disc3 } from "lucide-react";
 
 export default function AlbumsView(): React.JSX.Element {
   const navigate = useNavigate();
+  const { toggleFavoriteAlbum } = useFavorites();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
@@ -48,6 +50,10 @@ export default function AlbumsView(): React.JSX.Element {
             className="album-card" 
             style={{ cursor: "pointer" }}
             onClick={() => navigate(`/albums/${album.id}`)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              toggleFavoriteAlbum(album.id);
+            }}
           >
             <div style={{ 
               width: "100%", 

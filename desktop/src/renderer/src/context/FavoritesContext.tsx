@@ -7,6 +7,7 @@ interface FavoritesContextType {
   favoriteIds: Set<string>;
   loading: boolean;
   toggleFavorite: (trackId: string) => Promise<void>;
+  toggleFavoriteAlbum: (albumId: string) => Promise<void>;
   refreshFavorites: () => Promise<void>;
 }
 
@@ -28,6 +29,17 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       console.error("Failed to fetch favorites", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleFavoriteAlbum = async (albumId: string) => {
+    try {
+      const res = await apiClient.post("/api/favorites/album", { albumId });
+      if (res.data.success) {
+        await fetchFavorites();
+      }
+    } catch (err) {
+      console.error("Failed to toggle album favorite", err);
     }
   };
 
@@ -60,7 +72,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <FavoritesContext.Provider value={{ favorites, favoriteIds, loading, toggleFavorite, refreshFavorites: fetchFavorites }}>
+    <FavoritesContext.Provider value={{ favorites, favoriteIds, loading, toggleFavorite, toggleFavoriteAlbum, refreshFavorites: fetchFavorites }}>
       {children}
     </FavoritesContext.Provider>
   );

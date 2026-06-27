@@ -124,13 +124,13 @@ export async function getPlaylistTracks(id: string): Promise<Track[]> {
 }
 
 export async function createPlaylist(name: string, description?: string, isPublic = false): Promise<Playlist> {
-  const { data } = await apiClient.post<{ data: Playlist }>("/api/playlists", { name, description, isPublic });
-  return data.data;
+  const { data } = await apiClient.post<Playlist>("/api/playlists", { name, description, isPublic });
+  return data;
 }
 
 export async function updatePlaylist(id: string, updates: { name?: string; description?: string; isPublic?: boolean }): Promise<Playlist> {
-  const { data } = await apiClient.patch<{ data: Playlist }>(`/api/playlists/${id}`, updates);
-  return data.data;
+  const { data } = await apiClient.patch<Playlist>(`/api/playlists/${id}`, updates);
+  return data;
 }
 
 export async function deletePlaylist(id: string): Promise<void> {

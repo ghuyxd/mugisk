@@ -4,6 +4,7 @@ import type { Album, Track } from "@mugisk/shared-types";
 import { getAlbum, getAlbumTracks } from "../api/library";
 import { getServerUrlSync } from "../api/axios";
 import { usePlayer } from "../context/PlayerContext";
+import { useFavorites } from "../context/FavoritesContext";
 import { ArrowLeft, Play, MoreHorizontal, Disc3 } from "lucide-react";
 
 function formatDuration(seconds: number): string {
@@ -17,6 +18,7 @@ export default function AlbumDetailPage(): React.JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const player = usePlayer();
+  const { toggleFavorite } = useFavorites();
   const [album, setAlbum] = useState<Album | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);

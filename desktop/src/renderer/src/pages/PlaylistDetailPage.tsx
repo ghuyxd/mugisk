@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import type { Playlist, Track } from "@mugisk/shared-types";
 import { getPlaylist, getPlaylistTracks, removeTrackFromPlaylist, reorderPlaylistTracks, updatePlaylist } from "../api/library";
 import { usePlayer } from "../context/PlayerContext";
+import { useFavorites } from "../context/FavoritesContext";
 import { ArrowLeft, Play, MoreHorizontal, Trash2, GripVertical, Pencil } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -142,6 +143,8 @@ export default function PlaylistDetailPage(): React.JSX.Element {
       console.error(err);
     }
   };
+
+  const { toggleFavorite } = useFavorites();
 
   const handleContextMenu = (e: React.MouseEvent, track: Track) => {
     e.preventDefault();

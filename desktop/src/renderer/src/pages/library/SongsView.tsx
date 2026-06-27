@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import type { Track } from "@mugisk/shared-types";
 import { getTracks } from "../../api/library";
 import { usePlayer } from "../../context/PlayerContext";
+import { useFavorites } from "../../context/FavoritesContext";
 import { Play, Plus, MoreHorizontal } from "lucide-react";
 
 function formatDuration(seconds: number): string {
@@ -49,6 +50,8 @@ export default function SongsView(): React.JSX.Element {
     fetchTracks(nextPage);
   };
 
+  const { toggleFavorite } = useFavorites();
+
   const handlePlay = (track: Track, index: number) => {
     // If we have a massive list, passing the whole list might be heavy, but 100-500 is fine.
     player.playTrack(track, tracks, index);
@@ -56,7 +59,6 @@ export default function SongsView(): React.JSX.Element {
 
   const handleContextMenu = (e: React.MouseEvent, track: Track) => {
     e.preventDefault();
-    // Dispatch custom event for global context menu
     window.dispatchEvent(new CustomEvent("open-track-menu", {
       detail: { track, x: e.clientX, y: e.clientY }
     }));
