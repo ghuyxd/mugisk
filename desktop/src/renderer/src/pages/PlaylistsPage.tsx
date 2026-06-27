@@ -25,12 +25,16 @@ export default function PlaylistsPage(): React.JSX.Element {
     fetchPlaylists();
   }, []);
 
+  const [isCreating, setIsCreating] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+
   const handleCreate = async () => {
-    const name = prompt("Enter playlist name:");
-    if (!name) return;
+    if (!newPlaylistName.trim()) return;
     try {
-      await createPlaylist(name);
+      await createPlaylist(newPlaylistName.trim());
       fetchPlaylists();
+      setNewPlaylistName("");
+      setIsCreating(false);
     } catch (err) {
       console.error(err);
       alert("Failed to create playlist");
@@ -53,9 +57,34 @@ export default function PlaylistsPage(): React.JSX.Element {
     <div style={{ height: "100%", overflowY: "auto", padding: 24 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <h1 style={{ fontSize: 24, fontWeight: "bold", margin: 0 }}>Playlists</h1>
-        <button className="primary-btn" style={{ display: "flex", alignItems: "center", gap: 8 }} onClick={handleCreate}>
-          <Plus size={16} /> New Playlist
-        </button>
+        {isCreating ? (
+          <div style={{ display: "flex", gap: 8 }}>
+            <input 
+              type="text" 
+              value={newPlaylistName}
+              onChange={e => setNewPlaylistName(e.target.value)}
+              placeholder="Playlist name"
+              style={{ padding: "6px 12px", borderRadius: 4, border: "1px solid var(--border)", background: "var(--bg-lighter)", color: "var(--text)" }}
+              autoFocus
+              onKeyDown={e => { 
+                if (e.key === 'Enter') handleCreate(); 
+                if (e.key === 'Escape') {
+                  setIsCreating(false);
+                  setNewPlaylistName("");
+                }
+              }}
+            />
+            <button className="primary-btn" onClick={handleCreate}>Save</button>
+            <button onClick={() => {
+              setIsCreating(false);
+              setNewPlaylistName("");
+            }} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text)", padding: "6px 12px", borderRadius: 4, cursor: "pointer" }}>Cancel</button>
+          </div>
+        ) : (
+          <button className="primary-btn" style={{ display: "flex", alignItems: "center", gap: 8 }} onClick={() => setIsCreating(true)}>
+            <Plus size={16} /> New Playlist
+          </button>
+        )}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>

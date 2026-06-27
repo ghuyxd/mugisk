@@ -150,17 +150,26 @@ export default function PlaylistDetailPage(): React.JSX.Element {
     }));
   };
 
-  const handleRename = async () => {
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newName, setNewName] = useState("");
+
+  const handleRenameStart = () => {
+    setNewName(playlist?.name || "");
+    setIsRenaming(true);
+  };
+
+  const handleRenameSubmit = async () => {
     if (!playlist) return;
-    const newName = prompt("Enter new name for playlist:", playlist.name);
-    if (newName && newName !== playlist.name) {
+    const trimmed = newName.trim();
+    if (trimmed && trimmed !== playlist.name) {
       try {
-        const updated = await updatePlaylist(playlist.id, { name: newName });
+        const updated = await updatePlaylist(playlist.id, { name: trimmed });
         setPlaylist(updated);
       } catch (err) {
         console.error(err);
       }
     }
+    setIsRenaming(false);
   };
 
   if (loading) return <div style={{ padding: 24, color: "var(--text-muted)" }}>Loading playlist...</div>;
@@ -178,10 +187,30 @@ export default function PlaylistDetailPage(): React.JSX.Element {
       <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 32 }}>
         <div style={{ fontSize: 12, textTransform: "uppercase", fontWeight: 600, letterSpacing: 1, color: "var(--text-muted)" }}>Playlist</div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <h1 style={{ fontSize: 48, fontWeight: 800, margin: 0 }}>{playlist.name}</h1>
-          <button onClick={handleRename} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
-            <Pencil size={20} />
-          </button>
+          {isRenaming ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                type="text"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                autoFocus
+                style={{ fontSize: 48, fontWeight: 800, margin: 0, padding: 0, border: "none", borderBottom: "2px solid var(--primary)", background: "transparent", color: "inherit", outline: "none", width: "100%", maxWidth: 600 }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleRenameSubmit();
+                  if (e.key === 'Escape') setIsRenaming(false);
+                }}
+              />
+              <button className="primary-btn" onClick={handleRenameSubmit}>Save</button>
+              <button onClick={() => setIsRenaming(false)} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text)", padding: "6px 12px", borderRadius: 4, cursor: "pointer" }}>Cancel</button>
+            </div>
+          ) : (
+            <>
+              <h1 style={{ fontSize: 48, fontWeight: 800, margin: 0 }}>{playlist.name}</h1>
+              <button onClick={handleRenameStart} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
+                <Pencil size={20} />
+              </button>
+            </>
+          )}
         </div>
         <div style={{ fontSize: 16, color: "var(--text-muted)" }}>
           {tracks.length} tracks
