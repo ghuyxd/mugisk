@@ -119,6 +119,7 @@ model Track {
 
   album          Album?          @relation(fields: [albumId], references: [id], onDelete: SetNull)
   artist         Artist          @relation(fields: [artistId], references: [id], onDelete: Restrict)
+  lyrics         Lyrics?
   playlistTracks PlaylistTrack[]
   playHistory    PlayHistory[]
 
@@ -187,4 +188,18 @@ model ScanLog {
   @@index([createdAt])
   @@index([filePath])
   @@map("scan_logs")
+}
+
+/// Lyrics for a track, synced or plain.
+model Lyrics {
+  id           String   @id @default(cuid())
+  trackId      String   @unique
+  plainLyrics  String?
+  syncedLyrics String?
+  instrumental Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@map("lyrics")
 }

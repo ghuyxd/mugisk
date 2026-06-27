@@ -11,11 +11,13 @@ import {
   SkipForward,
   Volume2,
   VolumeX,
-  ListMusic
+  ListMusic,
+  Mic2
 } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import { getServerUrlSync } from "../api/axios";
 import QueuePanel from "./QueuePanel";
+import LyricsPanel from "./LyricsPanel";
 
 function formatTime(seconds: number): string {
   if (isNaN(seconds)) return "0:00";
@@ -27,6 +29,7 @@ function formatTime(seconds: number): string {
 export default function NowPlayingBar(): React.JSX.Element {
   const player = usePlayer();
   const [showQueue, setShowQueue] = useState(false);
+  const [showLyrics, setShowLyrics] = useState(false);
 
   const duration = player.currentTrack?.duration || 0;
   const currentTime = player.progress * duration;
@@ -131,8 +134,23 @@ export default function NowPlayingBar(): React.JSX.Element {
         <div className="bar-right">
           <button 
             className="bar-btn" 
+            aria-label="Lyrics"
+            onClick={() => {
+              setShowLyrics(v => !v);
+              if (!showLyrics) setShowQueue(false);
+            }}
+            style={{ color: showLyrics ? "var(--primary)" : undefined, marginRight: 8 }}
+          >
+            <Mic2 size={15} />
+          </button>
+
+          <button 
+            className="bar-btn" 
             aria-label="Queue"
-            onClick={() => setShowQueue(v => !v)}
+            onClick={() => {
+              setShowQueue(v => !v);
+              if (!showQueue) setShowLyrics(false);
+            }}
             style={{ color: showQueue ? "var(--primary)" : undefined, marginRight: 8 }}
           >
             <ListMusic size={15} />
@@ -158,6 +176,10 @@ export default function NowPlayingBar(): React.JSX.Element {
 
       {showQueue && (
         <QueuePanel onClose={() => setShowQueue(false)} />
+      )}
+
+      {showLyrics && (
+        <LyricsPanel onClose={() => setShowLyrics(false)} />
       )}
     </>
   );

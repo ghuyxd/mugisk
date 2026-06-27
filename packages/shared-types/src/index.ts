@@ -67,6 +67,14 @@ export interface Album {
   updatedAt: string;
 }
 
+export interface Lyrics {
+  id: string;
+  trackId: string;
+  plainLyrics: string | null;
+  syncedLyrics: string | null;
+  instrumental: boolean;
+}
+
 export interface Artist {
   id: string;
   name: string;
