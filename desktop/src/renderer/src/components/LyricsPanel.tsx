@@ -151,6 +151,11 @@ export default function LyricsPanel({ onClose }: { onClose: () => void }): React
                     <div 
                       key={i} 
                       ref={isActive ? activeLineRef : null}
+                      onClick={() => {
+                        if (player.currentTrack?.duration) {
+                          player.seek(line.time / player.currentTrack.duration);
+                        }
+                      }}
                       style={{
                         transition: "all 0.3s ease",
                         color: isActive ? "var(--primary)" : "var(--text)",
@@ -158,7 +163,8 @@ export default function LyricsPanel({ onClose }: { onClose: () => void }): React
                         fontWeight: isActive ? "bold" : "normal",
                         transform: isActive ? "scale(1.05)" : "scale(1)",
                         transformOrigin: "left center",
-                        marginBottom: 16
+                        marginBottom: 16,
+                        cursor: "pointer"
                       }}
                     >
                       {line.text}
