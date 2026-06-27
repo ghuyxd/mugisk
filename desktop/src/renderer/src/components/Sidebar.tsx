@@ -53,44 +53,7 @@ function SidebarLink({ item }: { item: NavItem }): React.JSX.Element {
 export default function Sidebar(): React.JSX.Element {
   return (
     <aside className="sidebar">
-      {/* Brand */}
-      <div
-        style={{
-          padding: "16px 16px 12px",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
-        <div
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 13,
-            fontWeight: 900,
-            color: "#fff",
-            flexShrink: 0,
-          }}
-        >
-          M
-        </div>
-        <span
-          style={{
-            fontSize: 15,
-            fontWeight: 700,
-            letterSpacing: "-0.2px",
-            color: "var(--text)",
-          }}
-        >
-          mugisk
-        </span>
-      </div>
+
 
       {/* Main nav */}
       <div className="sidebar-section">

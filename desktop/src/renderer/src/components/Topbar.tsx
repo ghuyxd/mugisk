@@ -2,12 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LogOut,
-  Minus,
   Search,
   Settings,
-  Square,
   User,
-  X,
   Music,
   Disc3,
   Mic2
@@ -246,30 +243,6 @@ export default function Topbar(): React.JSX.Element {
         )}
       </div>
 
-      {/* Window controls */}
-      <div style={{ display: "flex", gap: 2, marginLeft: 8 }}>
-        <button
-          className="titlebar-btn"
-          onClick={() => window.api.window.minimize()}
-          aria-label="Minimize"
-        >
-          <Minus size={12} />
-        </button>
-        <button
-          className="titlebar-btn"
-          onClick={() => window.api.window.maximize()}
-          aria-label="Maximize"
-        >
-          <Square size={11} />
-        </button>
-        <button
-          className="titlebar-btn close"
-          onClick={() => window.api.window.close()}
-          aria-label="Close"
-        >
-          <X size={12} />
-        </button>
-      </div>
     </header>
   );
 }
