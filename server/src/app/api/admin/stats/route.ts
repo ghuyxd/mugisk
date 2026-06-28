@@ -46,7 +46,8 @@ export const GET = withAdmin(async () => {
     recentUploads,
     config: {
       musicLibraryPath: process.env.MUSIC_LIBRARY_PATH ?? null,
-      aiKeyConfigured: isAiEnabled(),
+      aiKeyConfigured: Boolean(process.env.AI_API_KEY && process.env.AI_API_KEY.trim() !== ""),
+      aiFeatureEnabled: isAiEnabled(),
     },
   });
 });

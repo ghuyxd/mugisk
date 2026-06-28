@@ -7,6 +7,7 @@ interface StatsResponse {
   config: {
     musicLibraryPath: string | null;
     aiKeyConfigured: boolean;
+    aiFeatureEnabled: boolean;
   };
 }
 
@@ -24,7 +25,7 @@ export default function SettingsPage() {
     <>
       <div className="page-heading">
         <h1 className="page-title">Settings</h1>
-        <p className="page-subtitle">Server configuration — read-only</p>
+        <p className="page-subtitle">Server configuration</p>
       </div>
 
       {error && <div className="alert alert--error">{error}</div>}
@@ -67,33 +68,68 @@ export default function SettingsPage() {
               API key for AI-powered tag generation (key is never displayed)
             </div>
           </div>
-          <div className="settings-value">
+          <div className="settings-value" style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {config === null ? (
               <span style={{ color: "var(--color-muted)", opacity: 0.5 }}>Loading…</span>
-            ) : config.aiKeyConfigured ? (
-              <span
-                style={{
-                  color: "var(--color-success)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: "var(--color-success)",
-                    boxShadow: "0 0 6px var(--color-success)",
-                    display: "inline-block",
-                  }}
-                />
-                Configured
-              </span>
             ) : (
-              <span style={{ color: "var(--color-muted-light)" }}>Not configured</span>
+              <>
+                {config.aiKeyConfigured ? (
+                  <span
+                    style={{
+                      color: "var(--color-success)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.4rem",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: "var(--color-success)",
+                        boxShadow: "0 0 6px var(--color-success)",
+                        display: "inline-block",
+                      }}
+                    />
+                    Key Configured
+                  </span>
+                ) : (
+                  <span style={{ color: "var(--color-muted-light)" }}>Key not configured</span>
+                )}
+                {config.aiKeyConfigured && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const nextState = !config.aiFeatureEnabled;
+                        const res = await fetch("/api/admin/settings", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+                          body: JSON.stringify({ aiFeatureEnabled: nextState })
+                        });
+                        if (!res.ok) throw new Error("Failed to update");
+                        setConfig({ ...config, aiFeatureEnabled: nextState });
+                      } catch (err: any) {
+                        setError(err.message);
+                      }
+                    }}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: 6,
+                      border: "1px solid var(--color-border)",
+                      background: config.aiFeatureEnabled ? "var(--color-primary)" : "var(--color-surface-3)",
+                      color: config.aiFeatureEnabled ? "#fff" : "var(--color-text)",
+                      cursor: "pointer",
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    {config.aiFeatureEnabled ? "Enabled" : "Disabled"}
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -113,7 +149,7 @@ export default function SettingsPage() {
             <div className="settings-key">Phase</div>
             <div className="settings-desc">Current development phase</div>
           </div>
-          <div className="settings-value">Phase 5 — Admin Panel</div>
+          <div className="settings-value">Phase 9 — Final Polish</div>
         </div>
       </div>
 

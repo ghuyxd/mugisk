@@ -1,12 +1,25 @@
-# Mugisk
+# Mugisk 🎵
 
-> Self-hosted music streaming platform — own your music, own your server.
+> **Self-hosted music streaming platform — own your music, own your server.**
 
-Mugisk is a full-stack, self-hosted music streaming platform designed to give you complete control over your library. It features a responsive Electron desktop client, a robust Next.js API backend, auto-updating library scanning, and intelligent AI tagging capabilities.
+Mugisk is a modern, full-stack, self-hosted music streaming platform designed to give you complete control over your library. It features a beautiful Electron desktop client, a robust Next.js API backend, auto-updating library scanning, and intelligent AI tagging capabilities.
+
+![Mugisk Desktop Client](./desktop/resources/icon.png) *(Note: Replace with actual screenshot of the player)*
 
 ---
 
-## Architecture Overview
+## ✨ Key Features
+
+- **Beautiful Desktop Client**: Built with React, Vite, and Electron. Experience a rich, Feishin-style UI with fluid animations, sorting, and seamless playback.
+- **Auto-Syncing Library**: The Next.js backend uses `chokidar` to automatically detect new tracks dropped into your music folder and extracts metadata using `music-metadata`.
+- **AI-Powered Exploration**: Connect an AI provider (like OpenAI or DeepSeek) to automatically tag your library with genres and generate dynamic, personalized "Explore" playlists. *Toggleable via the Admin panel!*
+- **Admin Dashboard**: Manage your server, trigger manual library scans, view storage stats, and toggle features without editing config files.
+- **Secure Authentication**: JWT-based access with refresh token rotation.
+- **Docker-Ready**: Easy to deploy with a multi-stage Dockerfile and Docker Compose.
+
+---
+
+## 🏗️ Architecture Overview
 
 ```mermaid
 graph TD
@@ -43,7 +56,63 @@ graph TD
 
 ---
 
-## Features (By Phase)
+## 🚀 Getting Started
+
+### 🐳 Quickstart: Docker (Recommended for Self-Hosting)
+
+The easiest way to get Mugisk running is via Docker Compose.
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-org/mugisk.git
+   cd mugisk
+   ```
+2. Copy the environment template:
+   ```bash
+   cp .env.example .env
+   ```
+3. Edit `.env` with your secure passwords, secret keys, and point `MUSIC_LIBRARY_PATH` to your music folder.
+4. Start the server:
+   ```bash
+   docker compose up --build -d
+   ```
+5. Your server is now running on `http://localhost:3000`. 
+   Navigate to `/admin/settings` to view your dashboard (login with the `ADMIN_EMAIL` and `ADMIN_PASSWORD` from your `.env`).
+
+For a detailed deployment guide including reverse proxy (Caddy/Nginx) setup, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+### 💻 Local Development
+
+1. **Prerequisites**: Node.js ≥ 20, pnpm ≥ 9, PostgreSQL running.
+2. **Install**: `pnpm install`
+3. **Configure**: Copy `.env.example` to `.env` and fill it out.
+4. **Database**: Run `pnpm db:push` to apply the Prisma schema.
+5. **Start Services**:
+   ```bash
+   pnpm dev:server   # Next.js server on http://localhost:3000
+   pnpm dev:desktop  # Electron desktop client
+   ```
+
+To learn how to package the desktop client into `.exe`, `.dmg`, or `.AppImage`, see [docs/BUILDING.md](docs/BUILDING.md).
+
+---
+
+## 🛠️ Environment Variables
+
+| Variable | Description | Example / Default |
+|----------|-------------|-------------------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://mugisk:mugisk_dev@postgres:5432/mugisk` |
+| `JWT_SECRET` | Secret for signing access tokens | `super-secret-jwt-key` |
+| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens | `super-secret-refresh-key` |
+| `MUSIC_LIBRARY_PATH` | Absolute path to your music directory | `/music` |
+| `AI_API_KEY` | Optional key for AI features | `sk-...` |
+| `AI_FEATURE_ENABLED` | Toggles AI features on/off dynamically | `true` |
+
+---
+
+## 📍 Project Status
+
+Currently in **Phase 9 — Final Polish**. Mugisk is functionally complete!
 
 | Phase | Description | Key Features |
 |-------|-------------|--------------|
@@ -55,67 +124,10 @@ graph TD
 | **Phase 6** | AI Integration | Auto-tagging and playlist generation behind feature flags. |
 | **Phase 7** | Refinement | Client polish, keyboard shortcuts, final UI/UX. |
 | **Phase 8** | Deployment | Multi-stage Dockerfile, docker-compose, desktop packaging. |
+| **Phase 9** | Final Polish | Finishing touches, robust error handling, and AI customization toggles. |
 
 ---
 
-## Environment Variables Reference
-
-| Variable | Description | Example / Default |
-|----------|-------------|-------------------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://mugisk:mugisk_dev@postgres:5432/mugisk` |
-| `JWT_SECRET` | Secret for signing access tokens | `super-secret-jwt-key` |
-| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens | `super-secret-refresh-key` |
-| `MUSIC_LIBRARY_PATH` | Absolute path to your music directory | `/music` |
-| `AI_API_KEY` | Optional Anthropic or OpenAI key for AI features | `sk-...` |
-
----
-
-## Getting Started
-
-### Local Development (Non-Docker)
-
-1. **Prerequisites**: Node.js ≥ 20, pnpm ≥ 9, PostgreSQL instance running.
-2. **Install**: `pnpm install`
-3. **Configure**: Copy `.env.example` to `.env` and fill it out.
-4. **Database**: Run `pnpm db:push` to apply the Prisma schema.
-5. **Start Services**:
-   ```bash
-   pnpm dev:server   # Next.js server on http://localhost:3000
-   pnpm dev:desktop  # Electron desktop client
-   ```
-
-### Docker Setup (Production)
-
-1. Edit `.env` to include your production secrets.
-2. Run `docker compose up --build -d`.
-3. This brings up the database and the Next.js server. Migrations are run automatically on container start.
-4. Your server will be accessible on `http://localhost:3000` (or behind a reverse proxy like Caddy/Nginx).
-
-For detailed deployment instructions on a VPS, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
-
-For detailed desktop client build instructions, see [docs/BUILDING.md](docs/BUILDING.md).
-
----
-
-## API Endpoint Reference
-
-| Method | Path | Auth Required | Description |
-|--------|------|---------------|-------------|
-| `GET` | `/api/health` | No | Server health check |
-| `POST` | `/api/auth/login` | No | Authenticate and get JWT |
-| `POST` | `/api/auth/register` | No | Register a new user account |
-| `POST` | `/api/auth/refresh` | No (needs refresh token) | Refresh access token |
-| `GET` | `/api/library/artists` | Yes | List all artists |
-| `GET` | `/api/library/albums` | Yes | List all albums |
-| `GET` | `/api/library/tracks` | Yes | List all tracks |
-| `GET` | `/api/stream/[trackId]` | Yes | Stream track audio file |
-| `POST` | `/api/admin/library/scan` | Yes (Admin) | Trigger manual library scan |
-| `POST` | `/api/admin/library/upload` | Yes (Admin) | Upload new track to library |
-| `POST` | `/api/ai/tag` | Yes (Admin) | Auto-tag track metadata using AI |
-| `POST` | `/api/ai/playlist` | Yes | Generate a smart playlist via AI |
-
----
-
-## License
+## 📄 License
 
 MIT

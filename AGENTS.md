@@ -26,5 +26,5 @@ Mugisk is a **self-hosted music streaming platform** organized as a **pnpm monor
 
 ## Phase Status
 
-Currently in **Phase 1 — Scaffolding**. No business logic yet.
+Currently in **Phase 9 — Final Polish**.
 See `README.md` for the full roadmap.

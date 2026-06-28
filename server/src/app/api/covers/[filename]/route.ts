@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { Readable } from "stream";
 
 
 export async function GET(
@@ -17,16 +18,9 @@ export async function GET(
     }
 
     const stream = fs.createReadStream(filePath);
-    // Convert Node.js readable stream to Web ReadableStream
-    const readableStream = new ReadableStream({
-      start(controller) {
-        stream.on("data", (chunk) => controller.enqueue(chunk));
-        stream.on("end", () => controller.close());
-        stream.on("error", (err) => controller.error(err));
-      },
-    });
+    const readableStream = Readable.toWeb(stream);
 
-    return new NextResponse(readableStream, {
+    return new NextResponse(readableStream as any, {
       headers: {
         "Content-Type": "image/jpeg",
         "Cache-Control": "public, max-age=31536000, immutable",

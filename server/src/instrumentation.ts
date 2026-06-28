@@ -17,5 +17,8 @@ export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const { startWatcher } = await import("@/lib/library/watcher");
     startWatcher();
+
+    const { startExploreCron } = await import("@/lib/cron");
+    startExploreCron();
   }
 }
