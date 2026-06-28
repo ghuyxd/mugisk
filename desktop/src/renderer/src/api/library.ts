@@ -85,10 +85,12 @@ export async function getArtistAlbums(id: string): Promise<Album[]> {
 
 // ── Tracks ───────────────────────────────────────────────────────────────────
 
-export async function getTracks(page = 1, limit = 50, search?: string, genre?: string): Promise<PaginatedResponse<Track>> {
+export async function getTracks(page = 1, limit = 50, search?: string, genre?: string, sortBy?: string, sortOrder?: string): Promise<PaginatedResponse<Track>> {
   const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
   if (search) params.set("search", search);
   if (genre) params.set("genre", genre);
+  if (sortBy) params.set("sortBy", sortBy);
+  if (sortOrder) params.set("sortOrder", sortOrder);
   const { data } = await apiClient.get<BackendPaginated<any>>("/api/tracks", { params });
   return mapPaginatedResponse(data, mapTrack);
 }
