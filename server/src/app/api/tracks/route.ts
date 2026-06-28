@@ -35,7 +35,7 @@ const querySchema = z.object({
   genre: z.string().optional(),
   albumId: z.string().optional(),
   artistId: z.string().optional(),
-  sortBy: z.enum(["title", "createdAt", "durationSeconds"]).default("title"),
+  sortBy: z.enum(["title", "createdAt", "durationSeconds", "artist", "album"]).default("title"),
   sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
 
@@ -76,12 +76,21 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   if (albumId) where.albumId = albumId;
   if (artistId) where.artistId = artistId;
 
+  let orderBy: Prisma.TrackOrderByWithRelationInput = {};
+  if (sortBy === "artist") {
+    orderBy = { artist: { name: sortOrder } };
+  } else if (sortBy === "album") {
+    orderBy = { album: { title: sortOrder } };
+  } else {
+    orderBy = { [sortBy]: sortOrder };
+  }
+
   const [tracks, total] = await Promise.all([
     prisma.track.findMany({
       where,
       skip,
       take: limit,
-      orderBy: { [sortBy]: sortOrder },
+      orderBy,
       select: {
         id: true,
         title: true,

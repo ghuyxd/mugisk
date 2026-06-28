@@ -3,7 +3,7 @@ import type { Track } from "@mugisk/shared-types";
 import { getTracks } from "../../api/library";
 import { usePlayer } from "../../context/PlayerContext";
 import { useFavorites } from "../../context/FavoritesContext";
-import { Play, Plus, MoreHorizontal } from "lucide-react";
+import { Play, Plus, MoreHorizontal, ArrowUp, ArrowDown } from "lucide-react";
 
 function formatDuration(seconds: number): string {
   if (!seconds) return "0:00";
@@ -18,15 +18,17 @@ export default function SongsView(): React.JSX.Element {
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<string>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Parse genre from search if needed (simple way to support genre filter if navigated from GenresView)
   const queryParams = new URLSearchParams(window.location.hash.split('?')[1]);
   const genre = queryParams.get("genre") || undefined;
 
-  const fetchTracks = async (p: number) => {
+  const fetchTracks = async (p: number, currentSortBy = sortBy, currentSortOrder = sortOrder) => {
     try {
       setLoading(true);
-      const res = await getTracks(p, 100, undefined, genre);
+      const res = await getTracks(p, 100, undefined, genre, currentSortBy, currentSortOrder);
       if (p === 1) {
         setTracks(res.items);
       } else {
@@ -41,8 +43,16 @@ export default function SongsView(): React.JSX.Element {
   };
 
   useEffect(() => {
-    fetchTracks(1);
+    fetchTracks(1, sortBy, sortOrder);
   }, [genre]);
+
+  const handleSort = (field: string) => {
+    const newOrder = sortBy === field && sortOrder === "asc" ? "desc" : "asc";
+    setSortBy(field);
+    setSortOrder(newOrder);
+    setPage(1);
+    fetchTracks(1, field, newOrder);
+  };
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
@@ -64,17 +74,22 @@ export default function SongsView(): React.JSX.Element {
     }));
   };
 
+  const renderSortIcon = (field: string) => {
+    if (sortBy !== field) return null;
+    return sortOrder === "asc" ? <ArrowUp size={14} style={{ display: "inline", verticalAlign: "text-bottom", marginLeft: 4 }} /> : <ArrowDown size={14} style={{ display: "inline", verticalAlign: "text-bottom", marginLeft: 4 }} />;
+  };
+
   return (
     <div style={{ padding: "0 24px 24px" }}>
       {genre && <h2 style={{ marginBottom: 16 }}>Genre: {genre}</h2>}
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
-          <tr style={{ borderBottom: "1px solid var(--border)", textAlign: "left", color: "var(--text-muted)" }}>
-            <th style={{ padding: "8px 12px", width: 40 }}>#</th>
-            <th style={{ padding: "8px 12px" }}>Title</th>
-            <th style={{ padding: "8px 12px" }}>Artist</th>
-            <th style={{ padding: "8px 12px" }}>Album</th>
-            <th style={{ padding: "8px 12px", width: 80, textAlign: "right" }}>Time</th>
+          <tr style={{ borderBottom: "1px solid var(--border)", textAlign: "left", color: "var(--text-muted)", cursor: "pointer" }}>
+            <th style={{ padding: "8px 12px", width: 40 }} onClick={() => handleSort("createdAt")}>#{renderSortIcon("createdAt")}</th>
+            <th style={{ padding: "8px 12px" }} onClick={() => handleSort("title")}>Title{renderSortIcon("title")}</th>
+            <th style={{ padding: "8px 12px" }} onClick={() => handleSort("artist")}>Artist{renderSortIcon("artist")}</th>
+            <th style={{ padding: "8px 12px" }} onClick={() => handleSort("album")}>Album{renderSortIcon("album")}</th>
+            <th style={{ padding: "8px 12px", width: 80, textAlign: "right" }} onClick={() => handleSort("durationSeconds")}>Time{renderSortIcon("durationSeconds")}</th>
           </tr>
         </thead>
         <tbody>
